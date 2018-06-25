@@ -1,0 +1,459 @@
+pragma solidity ^0.4.14;
+
+import "./lib/oraclize/oraclizeAPI_0.4.sol";
+import "./lib/arachnid/solidity-stringutils/strings.sol";
+
+contract PgaDfs is usingOraclize {
+
+  using strings for *;
+
+  struct Golfer {
+    // not storing name,
+    // since we're trying to be minimal with data storage
+    // on ethereum's bloated ass blockchain.
+
+    // increments in 1
+    // salaries are roughly DK salaries / $500
+    // and can be negative!
+    int8 salary;
+
+    // thursday tee times for late swap-ability
+    // (which will cost a transaction fee! LOL!)
+    uint32 thursdayTeeTimestamp;
+
+    // fantasy points at end of tournament
+    int8 points;
+  }
+
+
+  struct Lineup {
+    // MAX of 8 pga tour ids...
+    // you can play less than 8 guys if you want!
+    uint16[8] golferIds;
+  }
+
+  struct Contest {
+    address owner; // creator of contest
+
+    bool isContest; // true always
+
+    uint entryFee; // TODO(christian): what units?
+    uint prizePool; // all money in contest balance, payable to winners
+
+    // yay or nay, is this an active contest
+    bool live;
+
+    // have we calculated the addressBalances after contest is over?
+    bool arePayoutsSet;
+
+    // when this was created
+    uint createdTimestamp;
+
+    // map ETH address --> lineup in contest
+    address[] entries;
+
+    mapping(address => bool) addressHasEntry;
+    mapping(address => Lineup) lineups;
+    mapping(address => int) entryScores;
+
+    // ETH address --> how much they recouped
+    // once we confirmed the event ends, then payout!
+    mapping(address => uint) balances;
+  }
+
+
+  event newOraclizeQuery(string description);
+
+  // this is the initializer of the contract
+  // who gets special privaledges:
+  // (1) if oraclize fucks up, you set scores manually
+  // (2) you can spend the extraEther in the contract
+  address public contractAdmin;
+  uint private extraEther;
+  uint private minBal;
+
+  // status (bool): is this oraclize query complete or not?
+  mapping(bytes32 => string) queryIdToCallbackAction;
+
+  // this is the CONSTRUCTOR!
+  // we must initialize the lubricaiton amount
+  // with the miniumum balance, which can never be recovered
+  function PgaDfs() public payable {
+    require(msg.value >= minBal);
+    // TODO: tinker with this gas value
+    oraclize_setCustomGasPrice(1000000000 wei);
+    // in the constructor (this function), msg.sender is
+    // the owner of the contract
+    contractAdmin = msg.sender;
+    extraEther = msg.value;
+
+    // execute a dummy transcaction to make fee estimation
+    // work by burning the free transaction
+    oraclize_query("URL", "json(http://api.fixer.io/latest?symbols=USD,GBP).rates.GBP");
+  }
+
+
+  // N.B. FROM CRYPTO RIC:
+  // if we want to fund money into the "lubrication account"
+  // this will allow the contract to function if the price
+  // of ether falls dramatically between querires
+  // and, as a result, because the query fee is charged in USD,
+  // the fee for subsequent queries goes up
+  // this should average out over time,
+  // we charge a small fee to make sure it more likely going up
+  // this fee, over the course of 400 wagers,
+  // should offset the irrecovable minimum balance
+  function deposit() payable external {
+    extraEther += msg.value;
+  }
+
+  // CRYPTO RIC:
+  // if we want to withdraw money from the lubrication account
+  // we can only draw from the extraEther gained,
+  // so as to protect and wall off funds from active wagers
+  // we must leave a minBal of .1 ether to serve as lubrication
+  // this protects people with wagers from us withdrawing
+  // all the lubrication while they have bets in, which
+  // would make them have the potential to fail
+  function withdraw() external {
+    require(msg.sender == contractAdmin);
+
+    if (extraEther - minBal > 0) {
+      contractAdmin.transfer(extraEther - minBal);
+      extraEther = minBal;
+    }
+  }
+
+  // pga tour id ==> golfer data (salary, scores, etc.)
+  uint[] pgaIdsInField;
+  mapping(uint => Golfer) pgaIdToGolfer;
+
+  // contest data
+  string[] contestIds;
+  mapping(string => Contest) contests;
+
+
+  // salary cap is 100
+  // salaries are integers and CAN BE NEGATIVE
+  // think mike weir
+  int salaryCap = 100;
+
+  // rake is 0.5% or 5/1000
+  uint rakeTimesOneThousand = 5;
+
+  // is scoring complete for the current tournament
+  bool isGolferScoringComplete;
+
+  // format: "pgaId:thursdayTeeTimestamp:salary"
+  // example: "34360:1522955700:15 32102:1522963620:-2" <-- salaries can be negative!
+  string compressedFieldUrl = "https://s3.amazonaws.com/uploads.trib3.com/drappi/ethereum/compressedField.json";
+
+  // format: "pgaId:rd1-rd2-rd3-rd4"
+  // example: "34360:69-66-67-71 32102:70-72-65-67"
+  string compressedScoresUrl = "https://s3.amazonaws.com/uploads.trib3.com/drappi/ethereum/compressedScores.json";
+
+  // change the compressed scores URL endpoint
+  function setCompressedScoresUrl(string compressedScoresUrl_) public {
+    compressedScoresUrl = compressedScoresUrl_;
+  }
+
+  function setCompressedFieldUrl(string compressedFieldUrl_) public {
+    compressedFieldUrl = compressedFieldUrl_;
+  }
+
+  function isValidLineup(uint16[8] proposedGolferIds) public view returns (bool) {
+
+    uint lineupLength = proposedGolferIds.length;
+    if (lineupLength > 8) {
+      // you can play at most 8 guys
+      // does the type in function arg already prevent this?
+      return false;
+    }
+
+    int16 totalSalary = 0;
+    for (uint8 ii = 0; ii < lineupLength; ii++) {
+      totalSalary += pgaIdToGolfer[proposedGolferIds[ii]].salary;
+    }
+
+    // and if you have 8 or less guys, their total salary
+    // must be less than or equal to the cap
+    return totalSalary <= salaryCap;
+  }
+
+  function setAlreadyValidatedLineup(string contestId, uint16[8] proposedGolferIds, address lineupAddress) public {
+    // TODO: ENCRYPT THIS LATER w/ Ric's idea
+    // EVERYONES LINEUPS ARE PUBLIC DATA RIGHT NOW LOL
+    // OR: use the jim hashed lineup trick,
+    // united with a really good frontend
+    // for revealing the lineup you have
+    Contest storage contest = contests[contestId];
+    contest.lineups[lineupAddress] = Lineup({golferIds : proposedGolferIds});
+    contest.addressHasEntry[lineupAddress] = true;
+  }
+
+  function isNewContestValid(string contestId, address proposedNewOwner) public view returns (bool) {
+    // make sure we aren't overwriting a previously used contestId.
+    // however, re-use of contest id is okay.
+    // that way, people can remember contest ids and join their fav
+    // contests without having to look for a link
+    if (contests[contestId].isContest) {
+      Contest memory oldContest = contests[contestId];
+
+      if (oldContest.live) {
+        // you can't re-create a live contest.
+        // prevents contest owners from
+        // effectively deleting a contest
+        return false;
+      }
+
+      // if we have a contest, check that the
+      // owner is the only one re-using it.
+      return (oldContest.owner == proposedNewOwner);
+    } else {
+      // if a contest with this contestId does not exist,
+      // then yes we can create it
+      return true;
+    }
+  }
+
+  function calculateRake(uint eth) public view returns (uint) {
+    return eth - (eth * rakeTimesOneThousand) / 1000;
+  }
+
+  function createContest(string contestId, uint16[8] proposedGolferIds) public payable {
+    // when you make a contest, you also must make a lineup, and you are auto-joined
+    require(isNewContestValid(contestId, msg.sender));
+    require(isValidLineup(proposedGolferIds));
+
+    contestIds.push(contestId);
+    contests[contestId] = Contest({
+      owner : msg.sender,
+      // entry fee is AUTOMATICALLY calculated by how much the owner deposits
+      entryFee : msg.value - calculateRake(msg.value),
+      createdTimestamp : block.timestamp,
+      live : true,
+      arePayoutsSet : false,
+      isContest : true,
+      prizePool : 0,
+      entries : new address[](0)
+    });
+    payEntryFeeToContest(contestId, msg.sender, msg.value);
+  }
+
+  function enterContest(string contestId, uint16[8] proposedGolferIds) public payable {
+    require(isValidLineup(proposedGolferIds));
+    payEntryFeeToContest(contestId, msg.sender, msg.value);
+    setAlreadyValidatedLineup(contestId, proposedGolferIds, msg.sender);
+  }
+
+  function editLineupInContest(string contestId, uint16[8] proposedGolferIds) public {
+    require(isValidLineup(proposedGolferIds));
+    setAlreadyValidatedLineup(contestId, proposedGolferIds, msg.sender);
+  }
+
+  function payEntryFeeToContest(string contestId, address msgSender, uint ethEntered) public payable {
+
+    Contest storage activeContest = contests[contestId];
+    if (!activeContest.addressHasEntry[msgSender]) {
+      // if they not are already in the contest, pay rake and enter
+      uint rakeToCollect = calculateRake(ethEntered);
+
+      require(ethEntered > activeContest.entryFee + rakeToCollect);
+
+      activeContest.prizePool += activeContest.entryFee;
+      extraEther += rakeToCollect;
+      // if someone sends us extra money,
+      // it goes their balance for the contest
+      // and by default they can get paid out at the end
+      // otherwise they can withdraw
+      activeContest.balances[msgSender] += ethEntered - activeContest.entryFee - rakeToCollect;
+    }
+
+  }
+
+  function setField(string compressedField) public {
+
+    // clear out old golfers (see if this requires a lot of gas?)
+    for (uint16 ii = 0; ii < pgaIdsInField.length; ii++) {
+      delete pgaIdToGolfer[pgaIdsInField[ii]];
+      delete pgaIdsInField[ii];
+    }
+    isGolferScoringComplete = false;
+
+    var compressedFieldSlice = compressedField.toSlice();
+    var playerDelimiter = " ".toSlice();
+    var playerSlices = new strings.slice[](compressedFieldSlice.count(playerDelimiter) + 1);
+
+    for (ii = 0; ii < playerSlices.length; ii++) {
+      playerSlices[ii] = compressedFieldSlice.split(playerDelimiter);
+      uint16 pgaPlayerId = uint16(parseInt(playerSlices[ii].split(":".toSlice()).toString()));
+      uint32 thursdayTeeTimestamp = uint32(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
+      int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
+
+      pgaIdsInField[ii] = pgaPlayerId;
+      pgaIdToGolfer[pgaPlayerId] = Golfer({
+          salary : salary,
+          thursdayTeeTimestamp : thursdayTeeTimestamp,
+          points : 0
+        });
+    }
+  }
+
+  function setScores(string compressedScores) public {
+    // TODO: really make sure this works
+    // TODO: difference between var and normal types?
+    require(!isGolferScoringComplete);
+
+    var compressedScoresSlice = compressedScores.toSlice();
+    var playerDelimiter = " ".toSlice();
+    var playerScoreSlices = new strings.slice[](compressedScoresSlice.count(playerDelimiter) + 1);
+
+    for (uint16 i = 0; i < playerScoreSlices.length; i++) {
+      playerScoreSlices[i] = compressedScoresSlice.split(playerDelimiter);
+      uint pgaPlayerId = parseInt(playerScoreSlices[i].split(":".toSlice()).toString());
+      uint roundSlices = playerScoreSlices[i].count("-".toSlice()) + 1;
+      for (uint rd = 0; rd < roundSlices; rd++) {
+        int8 rdScore = int8(parseInt(playerScoreSlices[i].split("-".toSlice()).toString()));
+        pgaIdToGolfer[pgaPlayerId].points += int8(80) - rdScore;
+      }
+    }
+    isGolferScoringComplete = true;
+  }
+
+  function setSingleContestPayouts(string contestId) public {
+    // everyone who scores > max(0, the contest average) gets paid
+    // you are paid proportional to your squared score
+    require(isGolferScoringComplete);
+
+    Contest storage contest = contests[contestId];
+    require(contest.live);
+    require(!contest.arePayoutsSet);
+
+    int32 totalEntries = int32(contest.entries.length);
+    int totalPoints = 0;
+
+    // calculate the average score in the contest
+    for (uint8 ii = 0; ii < totalEntries; ii++) {
+      address entry = contest.entries[ii];
+      uint16[8] memory entryPgaIds = contest.lineups[entry].golferIds;
+      for (uint8 g = 0; g < entryPgaIds.length; g++) {
+        contest.entryScores[entry] += pgaIdToGolfer[entryPgaIds[g]].points;
+      }
+      totalPoints += contest.entryScores[entry];
+    }
+
+    // of the top half (except any of those that scored < 0),
+    // sum up the squared scores
+    int averagePointsRoundedDown = totalPoints / totalEntries;
+    // ugh... only using storage since memory isnt dynamic
+    address[] storage winningEntries;
+    uint summedSquaredWinningScores = 0;
+
+    for (ii = 0; ii < totalEntries; ii++) {
+      entry = contest.entries[ii];
+      if (contest.entryScores[entry] >= averagePointsRoundedDown && contest.entryScores[entry] >= 0) {
+        uint squaredScore = uint(contest.entryScores[entry] * contest.entryScores[entry]);
+        winningEntries.push(entry);
+        summedSquaredWinningScores += squaredScore;
+      }
+    }
+
+    // then pay out people proportional to squared points
+    for (ii = 0; ii < winningEntries.length; ii++) {
+      entry = winningEntries[ii];
+      // TODO: make sure there's no rounding error B.S. going on
+      // that makes us massively over or under pay people
+      squaredScore = uint(contest.entryScores[entry] * contest.entryScores[entry]);
+      uint toPayout = (contest.prizePool * squaredScore) / summedSquaredWinningScores;
+      contest.balances[entry] += toPayout;
+    }
+
+    contest.arePayoutsSet = true;
+  }
+
+  function withdrawBalanceFromContest(string contestId) public {
+    Contest storage contest = contests[contestId];
+    if (contest.balances[msg.sender] > 0) {
+      msg.sender.transfer(contest.balances[msg.sender]);
+      contest.balances[msg.sender] = 0;
+    }
+  }
+
+  function payOutContest(string contestId) public {
+    require(isGolferScoringComplete);
+
+    Contest storage contest = contests[contestId];
+    require(contest.arePayoutsSet);
+    require(contest.live);
+
+    for (uint ii = 0; ii < contest.entries.length; ii++) {
+      address entry = contest.entries[ii];
+      if (contest.balances[entry] > 0) {
+        entry.transfer(contest.balances[entry]);
+        contest.balances[msg.sender] = 0;
+      }
+    }
+
+    contest.live = false;
+  }
+
+  function getFieldOnChain() public payable {
+    innerOraclizeQuery(compressedFieldUrl, "field");
+  }
+
+  function getScoresOnChain() public payable {
+    innerOraclizeQuery(compressedScoresUrl, "scores");
+  }
+
+  // ========================= ORACLIZE functions =========================
+
+
+  function innerOraclizeQuery(string queryUrl, string callbackAction) public payable {
+    // TODO: make these constants
+    uint cost = 2400000000000000 + (oraclize_getPrice("URL") * 3);
+    uint fee = 100000000000000;
+
+    if (msg.value < cost + fee) {
+      newOraclizeQuery("Oraclize query failed. Send more ETH (.0025ETH in gas + $.03 per query");
+      msg.sender.transfer(msg.value);
+    } else {
+      extraEther += msg.value - cost;
+      newOraclizeQuery("Oraclize queries were sent, standing by for the answer.");
+      bytes32 queryId = oraclize_query(
+        "URL",
+        strConcat("json(", queryUrl, ").compressedScores"),
+        600000
+      );
+      queryIdToCallbackAction[queryId] = callbackAction;
+    }
+  }
+
+  // switch function for callbacks
+  function __callback(bytes32 myid, string result) public {
+    require(msg.sender == oraclize_cbAddress());
+    // can't compare string storage pointers and string literals,
+    // so instead let's compare their keccak256 hashes!
+    bytes32 actionHash = keccak256(queryIdToCallbackAction[myid]);
+    if (actionHash == keccak256("field")) {
+      setField(result);
+    }
+    if (actionHash == keccak256("scores")) {
+      setScores(result);
+    }
+  }
+
+  // CRYPTO RIC:
+  // should anyone wish to be a good blockchain citizen
+  // and delete a wager that is no longer live
+  function deleteContest(string contestId) external {
+    require(!contests[contestId].live);
+    delete contests[contestId];
+  }
+
+  // CRYPTO RIC:
+  // breaking down the free "getter" functions
+  // into pieces for the compiler's stack
+  function getContestIsLive(string contestId) constant external returns (bool) {
+    return contests[contestId].live;
+  }
+}
