@@ -29,7 +29,7 @@ export const store = new Vuex.Store({
      state.web3.balance = parseInt(payload.balance, 10)
    },
    registerContractInstance (state, payload) {
-     console.log('Casino contract instance: ', payload)
+     console.log('PgaDfs contract instance: ', payload)
      state.contractInstance = () => payload
    }
   },
