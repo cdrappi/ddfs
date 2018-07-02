@@ -1,5 +1,5 @@
 <template>
-  <div class="casino container">
+  <div class="pga-dfs container">
     <h1>Welcome</h1>
     <h4>Please pick a number between 1 and 10</h4>
     Amount to bet: <input v-model="amount" placeholder="0 Ether">
@@ -69,7 +69,7 @@ export default {
 </script>
 
 <style scoped>
-.casino {
+.pga-dfs {
      margin-top: 50px;
      text-align:center;
 }
