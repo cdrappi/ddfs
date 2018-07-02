@@ -144,21 +144,23 @@ contract PgaDfs is usingOraclize {
   // is scoring complete for the current tournament
   bool isGolferScoringComplete;
 
-  // format: "pgaId:thursdayTeeTimestamp:salary"
+  // format: "{pgaId}:{thursdayTeeTimestamp}:{salary}"
   // example: "34360:1522955700:15 32102:1522963620:-2" <-- salaries can be negative!
-  string compressedFieldUrl = "https://s3.amazonaws.com/uploads.trib3.com/drappi/ethereum/compressedField.json";
+  string compressedFieldUrl = ""; // e.g. "https://s3.amazonaws.com/ethdfs/pga/compressedField/2018/471.json";
 
-  // format: "pgaId:rd1-rd2-rd3-rd4"
+  // format: "{pgaId}:{rd1}-{rd2}-{rd3}-{rd4}"
   // example: "34360:69-66-67-71 32102:70-72-65-67"
-  string compressedScoresUrl = "https://s3.amazonaws.com/uploads.trib3.com/drappi/ethereum/compressedScores.json";
+  string compressedScoresUrl = ""; // e.g. "https://s3.amazonaws.com/ethdfs/pga/compressedScores/2018/471.json";
 
   // change the compressed scores URL endpoint
   function setCompressedScoresUrl(string compressedScoresUrl_) public {
-    compressedScoresUrl = compressedScoresUrl_;
+      require(msg.sender == owner);
+      compressedScoresUrl = compressedScoresUrl_;
   }
 
   function setCompressedFieldUrl(string compressedFieldUrl_) public {
-    compressedFieldUrl = compressedFieldUrl_;
+      require(msg.sender == owner);
+      compressedFieldUrl = compressedFieldUrl_;
   }
 
   function isValidLineup(uint16[8] proposedGolferIds) public view returns (bool) {
