@@ -29,7 +29,7 @@ contract PgaDfs is usingOraclize {
   struct Lineup {
     // MAX of 8 pga tour ids...
     // you can play less than 8 guys if you want!
-    uint16[8] golferIds;
+    string[8] golferIds;
   }
 
   struct Contest {
@@ -126,7 +126,7 @@ contract PgaDfs is usingOraclize {
 
   // pga tour id ==> golfer data (salary, scores, etc.)
   uint[] pgaIdsInField;
-  mapping(uint => Golfer) pgaIdToGolfer;
+  mapping(string => Golfer) pgaIdToGolfer;
 
   // contest data
   string[] contestIds;
@@ -163,7 +163,7 @@ contract PgaDfs is usingOraclize {
       compressedFieldUrl = compressedFieldUrl_;
   }
 
-  function isValidLineup(uint16[8] proposedGolferIds) public view returns (bool) {
+  function isValidLineup(string[8] proposedGolferIds) public view returns (bool) {
 
     uint lineupLength = proposedGolferIds.length;
     if (lineupLength > 8) {
@@ -182,7 +182,7 @@ contract PgaDfs is usingOraclize {
     return totalSalary <= salaryCap;
   }
 
-  function setAlreadyValidatedLineup(string contestId, uint16[8] proposedGolferIds, address lineupAddress) public {
+  function setAlreadyValidatedLineup(string contestId, string[8] proposedGolferIds, address lineupAddress) public {
     // TODO: ENCRYPT THIS LATER w/ Ric's idea
     // EVERYONES LINEUPS ARE PUBLIC DATA RIGHT NOW LOL
     // OR: use the jim hashed lineup trick,
@@ -222,7 +222,7 @@ contract PgaDfs is usingOraclize {
     return eth - (eth * rakeTimesOneThousand) / 1000;
   }
 
-  function createContest(string contestId, uint16[8] proposedGolferIds) public payable {
+  function createContest(string contestId, string[8] proposedGolferIds) public payable {
     // when you make a contest, you also must make a lineup, and you are auto-joined
     require(isNewContestValid(contestId, msg.sender));
     require(isValidLineup(proposedGolferIds));
@@ -242,13 +242,13 @@ contract PgaDfs is usingOraclize {
     payEntryFeeToContest(contestId, msg.sender, msg.value);
   }
 
-  function enterContest(string contestId, uint16[8] proposedGolferIds) public payable {
+  function enterContest(string contestId, string[8] proposedGolferIds) public payable {
     require(isValidLineup(proposedGolferIds));
     payEntryFeeToContest(contestId, msg.sender, msg.value);
     setAlreadyValidatedLineup(contestId, proposedGolferIds, msg.sender);
   }
 
-  function editLineupInContest(string contestId, uint16[8] proposedGolferIds) public {
+  function editLineupInContest(string contestId, string[8] proposedGolferIds) public {
     require(isValidLineup(proposedGolferIds));
     setAlreadyValidatedLineup(contestId, proposedGolferIds, msg.sender);
   }
@@ -337,7 +337,7 @@ contract PgaDfs is usingOraclize {
     // calculate the average score in the contest
     for (uint8 ii = 0; ii < totalEntries; ii++) {
       address entry = contest.entries[ii];
-      uint16[8] memory entryPgaIds = contest.lineups[entry].golferIds;
+      string[8] memory entryPgaIds = contest.lineups[entry].golferIds;
       for (uint8 g = 0; g < entryPgaIds.length; g++) {
         contest.entryScores[entry] += pgaIdToGolfer[entryPgaIds[g]].points;
       }
