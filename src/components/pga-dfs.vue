@@ -1,6 +1,6 @@
 <template>
   <div class="casino container">
-    <h1>Welcome to the Casino</h1>
+    <h1>Welcome</h1>
     <h4>Please pick a number between 1 and 10</h4>
     Amount to bet: <input v-model="amount" placeholder="0 Ether">
     <ul>
@@ -25,7 +25,7 @@
 
 <script>
 export default {
-  name: 'casino',
+  name: 'pga-dfs',
   data () {
     return {
       amount: null,

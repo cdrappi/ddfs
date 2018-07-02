@@ -20,7 +20,7 @@ let getWeb3 = new Promise(function (resolve, reject) {
       }
     })
   } else {
-    web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:7545')) // GANACHE FALLBACK
+    // web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:7545')) // GANACHE FALLBACK
     reject(new Error('Unable to connect to Metamask'))
   }
 })
