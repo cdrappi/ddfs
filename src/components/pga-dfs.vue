@@ -2,6 +2,7 @@
   <div class="pga-dfs container">
     <h1>Welcome</h1>
     <h4>Set Scores URL</h4>
+    <input v-model="scoresUrl" placeholder="Scores URL">
     <h4>Please pick a number between 1 and 10</h4>
     Amount to bet: <input v-model="amount" placeholder="0 Ether">
     <ul>
