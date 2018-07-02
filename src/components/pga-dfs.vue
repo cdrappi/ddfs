@@ -1,6 +1,7 @@
 <template>
   <div class="pga-dfs container">
     <h1>Welcome</h1>
+    <h4>Set Scores URL</h4>
     <h4>Please pick a number between 1 and 10</h4>
     Amount to bet: <input v-model="amount" placeholder="0 Ether">
     <ul>
@@ -30,10 +31,14 @@ export default {
     return {
       amount: null,
       pending: false,
-      winEvent: null
+      winEvent: null,
+      scoresUrl: ''
     }
   },
   methods: {
+    setScores(event) {
+        console.log('Setting scores to ', this.scoresUrl)
+    },
     clickNumber (event) {
       console.log('BETTING ON NUMBER, AMOUNT', event.target.innerHTML, this.amount)
       this.winEvent = null
