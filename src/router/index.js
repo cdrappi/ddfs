@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import PgaDfs from '@/components/pga-dfs'
+import PgadfsDapp from '@/components/pgadfs-dapp'
 
 Vue.use(Router)
 
@@ -8,8 +8,8 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'pga-dfs',
-      component: PgaDfs
+      name: 'pgadfs-dapp',
+      component: PgadfsDapp
     }
   ]
 })

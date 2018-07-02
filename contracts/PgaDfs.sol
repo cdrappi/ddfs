@@ -152,17 +152,6 @@ contract PgaDfs is usingOraclize {
   // example: "34360:69-66-67-71 32102:70-72-65-67"
   string compressedScoresUrl = ""; // e.g. "https://s3.amazonaws.com/ethdfs/pga/compressedScores/2018/471.json";
 
-  // change the compressed scores URL endpoint
-  function setCompressedScoresUrl(string compressedScoresUrl_) public {
-      require(msg.sender == owner);
-      compressedScoresUrl = compressedScoresUrl_;
-  }
-
-  function setCompressedFieldUrl(string compressedFieldUrl_) public {
-      require(msg.sender == owner);
-      compressedFieldUrl = compressedFieldUrl_;
-  }
-
   function isValidLineup(string[8] proposedGolferIds) public view returns (bool) {
 
     uint lineupLength = proposedGolferIds.length;
@@ -397,6 +386,29 @@ contract PgaDfs is usingOraclize {
     }
 
     contest.live = false;
+  }
+
+  function setScoresUrlAndGetResultsOnChain(string compressedScoresUrl_) public {
+      require(msg.sender == owner);
+      setCompressedScoresUrl(compressedScoresUrl_);
+      getScoresOnChain();
+  }
+
+  function setFieldUrlAndGetFieldOnChain(string compressedFieldUrl_) public {
+      require(msg.sender == owner);
+      setCompressedFieldUrl(compressedFieldUrl_);
+      getFieldOnChain();
+  }
+
+  // change the compressed scores URL endpoint
+  function setCompressedScoresUrl(string compressedScoresUrl_) public {
+    require(msg.sender == owner);
+    compressedScoresUrl = compressedScoresUrl_;
+  }
+
+  function setCompressedFieldUrl(string compressedFieldUrl_) public {
+    require(msg.sender == owner);
+    compressedFieldUrl = compressedFieldUrl_;
   }
 
   function getFieldOnChain() public payable {
