@@ -1,26 +1,11 @@
 <template>
   <div class="pga-dfs container">
-    <h1>Welcome</h1>
-    <h4>Set Scores URL</h4>
-    <input v-model="scoresUrl" placeholder="Scores URL">
-    <h4>Please pick a number between 1 and 10</h4>
-    Amount to bet: <input v-model="amount" placeholder="0 Ether">
-    <ul>
-      <li v-on:click="clickNumber">1</li>
-      <li v-on:click="clickNumber">2</li>
-      <li v-on:click="clickNumber">3</li>
-      <li v-on:click="clickNumber">4</li>
-      <li v-on:click="clickNumber">5</li>
-      <li v-on:click="clickNumber">6</li>
-      <li v-on:click="clickNumber">7</li>
-      <li v-on:click="clickNumber">8</li>
-      <li v-on:click="clickNumber">9</li>
-      <li v-on:click="clickNumber">10</li>
-    </ul>
-    <img v-if="pending" id="loader" src="https://loading.io/spinners/double-ring/lg.double-ring-spinner.gif">
-    <div class="event" v-if="winEvent">
-      <p v-if="winEvent._status" id="has-won"><i aria-hidden="true" class="fa fa-check"></i> Congragulations, you have won {{winEvent._amount}} wei</p>
-      <p v-else id="has-lost"><i aria-hidden="true" class="fa fa-times"></i> Sorry you lost, try again.</p>
+    <h2>Set Salary URL</h2>
+    <div>
+        <input v-model="salaryUrl" placeholder="INPUT URL HERE">
+    </div>
+    <div>
+        <button v-on:click="setSalaries">SET SALARIES</button>
     </div>
   </div>
 </template>
@@ -33,38 +18,28 @@ export default {
       amount: null,
       pending: false,
       winEvent: null,
+      salaryUrl: '',
       scoresUrl: ''
     }
   },
   methods: {
-    setScores(event) {
-        console.log('Setting scores to ', this.scoresUrl)
-    },
-    clickNumber (event) {
-      console.log('BETTING ON NUMBER, AMOUNT', event.target.innerHTML, this.amount)
-      this.winEvent = null
-      this.pending = true
-      this.$store.state.contractInstance().bet(event.target.innerHTML, {
-        gas: 300000,
-        value: this.$store.state.web3.web3Instance().toWei(this.amount, 'ether'),
-        from: this.$store.state.web3.coinbase
-      }, (err, result) => {
-        if (err) {
-          console.log(err)
-          this.pending = false
-        } else {
-          let Won = this.$store.state.contractInstance().Won()
-          Won.watch((err, result) => {
-            if (err) {
-              console.log('could not get event Won()')
-            } else {
-              this.winEvent = result.args
-              this.winEvent._amount = parseInt(result.args._amount, 10)
-              this.pending = false
+    setSalaries(event) {
+        console.log('Setting scores to ', this.salaryUrl)
+        this.$store.state.contractInstance().setSalariesUrlAndGetSalariesOnChain(
+            event.target.innerHTML,
+            {
+                gas: 300000,
+                from: this.$store.state.web3.coinbase,
+                // value:
+                compressedSalariesUrl_: this.salaryUrl
+            }, (err, result) => {
+                if (err) {
+                  console.log('error in salaries url: ', err)
+                } else {
+                    console.log('salaries url result: ', result)
+                }
             }
-          })
-        }
-      })
+        )
     }
   },
   mounted () {
