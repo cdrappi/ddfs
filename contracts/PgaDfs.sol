@@ -29,7 +29,7 @@ contract PgaDfs is usingOraclize {
   struct Lineup {
     // MAX of 8 pga tour ids...
     // you can play less than 8 guys if you want!
-    string[8] golferIds;
+    bytes6[8] golferIds;
   }
 
   struct Contest {
@@ -125,8 +125,8 @@ contract PgaDfs is usingOraclize {
   }
 
   // pga tour id ==> golfer data (salary, scores, etc.)
-  uint[] pgaIdsInSalaries;
-  mapping(string => Golfer) pgaIdToGolfer;
+  bytes6[] pgaIdsInSalaries;
+  mapping(bytes6 => Golfer) pgaIdToGolfer;
 
   // contest data
   string[] contestIds;
@@ -152,7 +152,7 @@ contract PgaDfs is usingOraclize {
   // example: "34360:69-66-67-71 32102:70-72-65-67"
   string compressedScoresUrl = ""; // e.g. "https://s3.amazonaws.com/ethdfs/pga/compressedScores/2018/471.json";
 
-  function isValidLineup(string[8] proposedGolferIds) public view returns (bool) {
+  function isValidLineup(bytes6[8] proposedGolferIds) public view returns (bool) {
 
     uint lineupLength = proposedGolferIds.length;
     if (lineupLength > 8) {
@@ -171,7 +171,7 @@ contract PgaDfs is usingOraclize {
     return totalSalary <= salaryCap;
   }
 
-  function setAlreadyValidatedLineup(string contestId, string[8] proposedGolferIds, address lineupAddress) public {
+  function setAlreadyValidatedLineup(string contestId, bytes6[8] proposedGolferIds, address lineupAddress) public {
     // TODO: ENCRYPT THIS LATER w/ Ric's idea
     // EVERYONES LINEUPS ARE PUBLIC DATA RIGHT NOW LOL
     // OR: use the jim hashed lineup trick,
@@ -211,7 +211,7 @@ contract PgaDfs is usingOraclize {
     return eth - (eth * rakeTimesOneThousand) / 1000;
   }
 
-  function createContest(string contestId, string[8] proposedGolferIds) public payable {
+  function createContest(string contestId, bytes6[8] proposedGolferIds) public payable {
     // when you make a contest, you also must make a lineup, and you are auto-joined
     require(isNewContestValid(contestId, msg.sender));
     require(isValidLineup(proposedGolferIds));
@@ -231,13 +231,13 @@ contract PgaDfs is usingOraclize {
     payEntryFeeToContest(contestId, msg.sender, msg.value);
   }
 
-  function enterContest(string contestId, string[8] proposedGolferIds) public payable {
+  function enterContest(string contestId, bytes6[8] proposedGolferIds) public payable {
     require(isValidLineup(proposedGolferIds));
     payEntryFeeToContest(contestId, msg.sender, msg.value);
     setAlreadyValidatedLineup(contestId, proposedGolferIds, msg.sender);
   }
 
-  function editLineupInContest(string contestId, string[8] proposedGolferIds) public {
+  function editLineupInContest(string contestId, bytes6[8] proposedGolferIds) public {
     require(isValidLineup(proposedGolferIds));
     setAlreadyValidatedLineup(contestId, proposedGolferIds, msg.sender);
   }
@@ -277,7 +277,7 @@ contract PgaDfs is usingOraclize {
 
     for (ii = 0; ii < playerSlices.length; ii++) {
       playerSlices[ii] = compressedSalariesSlice.split(playerDelimiter);
-      uint16 pgaPlayerId = uint16(parseInt(playerSlices[ii].split(":".toSlice()).toString()));
+      bytes6 pgaPlayerId = bytes6(playerSlices[ii].split(":".toSlice()).toString());
       uint32 thursdayTeeTimestamp = uint32(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
       int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
 
@@ -301,7 +301,7 @@ contract PgaDfs is usingOraclize {
 
     for (uint16 i = 0; i < playerScoreSlices.length; i++) {
       playerScoreSlices[i] = compressedScoresSlice.split(playerDelimiter);
-      uint pgaPlayerId = parseInt(playerScoreSlices[i].split(":".toSlice()).toString());
+      bytes6 pgaPlayerId = bytes6(playerScoreSlices[i].split(":".toSlice()).toString());
       uint roundSlices = playerScoreSlices[i].count("-".toSlice()) + 1;
       for (uint rd = 0; rd < roundSlices; rd++) {
         int8 rdScore = int8(parseInt(playerScoreSlices[i].split("-".toSlice()).toString()));
@@ -326,7 +326,7 @@ contract PgaDfs is usingOraclize {
     // calculate the average score in the contest
     for (uint8 ii = 0; ii < totalEntries; ii++) {
       address entry = contest.entries[ii];
-      string[8] memory entryPgaIds = contest.lineups[entry].golferIds;
+      bytes6[8] memory entryPgaIds = contest.lineups[entry].golferIds;
       for (uint8 g = 0; g < entryPgaIds.length; g++) {
         contest.entryScores[entry] += pgaIdToGolfer[entryPgaIds[g]].points;
       }
