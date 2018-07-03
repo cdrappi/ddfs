@@ -5,6 +5,8 @@ import getWeb3 from '../util/getWeb3'
 import pollWeb3 from '../util/pollWeb3'
 import getContract from '../util/getContract'
 
+console.log('MONKEY')
+
 Vue.use(Vuex)
 
 export const store = new Vuex.Store({

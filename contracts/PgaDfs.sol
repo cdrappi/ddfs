@@ -125,7 +125,7 @@ contract PgaDfs is usingOraclize {
   }
 
   // pga tour id ==> golfer data (salary, scores, etc.)
-  uint[] pgaIdsInField;
+  uint[] pgaIdsInSalaries;
   mapping(string => Golfer) pgaIdToGolfer;
 
   // contest data
@@ -146,7 +146,7 @@ contract PgaDfs is usingOraclize {
 
   // format: "{pgaId}:{thursdayTeeTimestamp}:{salary}"
   // example: "34360:1522955700:15 32102:1522963620:-2" <-- salaries can be negative!
-  string compressedFieldUrl = ""; // e.g. "https://s3.amazonaws.com/ethdfs/pga/compressedField/2018/471.json";
+  string compressedSalariesUrl = ""; // e.g. "https://s3.amazonaws.com/ethdfs/pga/compressedSalaries/2018/471.json";
 
   // format: "{pgaId}:{rd1}-{rd2}-{rd3}-{rd4}"
   // example: "34360:69-66-67-71 32102:70-72-65-67"
@@ -262,26 +262,26 @@ contract PgaDfs is usingOraclize {
 
   }
 
-  function setField(string compressedField) public {
+  function setSalaries(string compressedSalaries) public {
 
     // clear out old golfers (see if this requires a lot of gas?)
-    for (uint16 ii = 0; ii < pgaIdsInField.length; ii++) {
-      delete pgaIdToGolfer[pgaIdsInField[ii]];
-      delete pgaIdsInField[ii];
+    for (uint16 ii = 0; ii < pgaIdsInSalaries.length; ii++) {
+      delete pgaIdToGolfer[pgaIdsInSalaries[ii]];
+      delete pgaIdsInSalaries[ii];
     }
     isGolferScoringComplete = false;
 
-    var compressedFieldSlice = compressedField.toSlice();
+    var compressedSalariesSlice = compressedSalaries.toSlice();
     var playerDelimiter = " ".toSlice();
-    var playerSlices = new strings.slice[](compressedFieldSlice.count(playerDelimiter) + 1);
+    var playerSlices = new strings.slice[](compressedSalariesSlice.count(playerDelimiter) + 1);
 
     for (ii = 0; ii < playerSlices.length; ii++) {
-      playerSlices[ii] = compressedFieldSlice.split(playerDelimiter);
+      playerSlices[ii] = compressedSalariesSlice.split(playerDelimiter);
       uint16 pgaPlayerId = uint16(parseInt(playerSlices[ii].split(":".toSlice()).toString()));
       uint32 thursdayTeeTimestamp = uint32(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
       int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
 
-      pgaIdsInField[ii] = pgaPlayerId;
+      pgaIdsInSalaries[ii] = pgaPlayerId;
       pgaIdToGolfer[pgaPlayerId] = Golfer({
           salary : salary,
           thursdayTeeTimestamp : thursdayTeeTimestamp,
@@ -394,10 +394,10 @@ contract PgaDfs is usingOraclize {
       getScoresOnChain();
   }
 
-  function setFieldUrlAndGetFieldOnChain(string compressedFieldUrl_) public {
+  function setSalariesUrlAndGetSalariesOnChain(string compressedSalariesUrl_) public {
       require(msg.sender == owner);
-      setCompressedFieldUrl(compressedFieldUrl_);
-      getFieldOnChain();
+      setcompressedSalariesUrl(compressedSalariesUrl_);
+      getSalariesOnChain();
   }
 
   // change the compressed scores URL endpoint
@@ -406,13 +406,13 @@ contract PgaDfs is usingOraclize {
     compressedScoresUrl = compressedScoresUrl_;
   }
 
-  function setCompressedFieldUrl(string compressedFieldUrl_) public {
+  function setcompressedSalariesUrl(string compressedSalariesUrl_) public {
     require(msg.sender == owner);
-    compressedFieldUrl = compressedFieldUrl_;
+    compressedSalariesUrl = compressedSalariesUrl_;
   }
 
-  function getFieldOnChain() public payable {
-    innerOraclizeQuery(compressedFieldUrl, "field");
+  function getSalariesOnChain() public payable {
+    innerOraclizeQuery(compressedSalariesUrl, "Salaries");
   }
 
   function getScoresOnChain() public payable {
@@ -448,8 +448,8 @@ contract PgaDfs is usingOraclize {
     // can't compare string storage pointers and string literals,
     // so instead let's compare their keccak256 hashes!
     bytes32 actionHash = keccak256(queryIdToCallbackAction[myid]);
-    if (actionHash == keccak256("field")) {
-      setField(result);
+    if (actionHash == keccak256("Salaries")) {
+      setSalaries(result);
     }
     if (actionHash == keccak256("scores")) {
       setScores(result);
