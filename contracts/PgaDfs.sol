@@ -389,25 +389,25 @@ contract PgaDfs is usingOraclize {
   }
 
   function setScoresUrlAndGetResultsOnChain(string compressedScoresUrl_) public {
-      require(msg.sender == owner);
+      require(msg.sender == contractAdmin);
       setCompressedScoresUrl(compressedScoresUrl_);
       getScoresOnChain();
   }
 
   function setSalariesUrlAndGetSalariesOnChain(string compressedSalariesUrl_) public {
-      require(msg.sender == owner);
+      require(msg.sender == contractAdmin);
       setcompressedSalariesUrl(compressedSalariesUrl_);
       getSalariesOnChain();
   }
 
   // change the compressed scores URL endpoint
   function setCompressedScoresUrl(string compressedScoresUrl_) public {
-    require(msg.sender == owner);
+    require(msg.sender == contractAdmin);
     compressedScoresUrl = compressedScoresUrl_;
   }
 
   function setcompressedSalariesUrl(string compressedSalariesUrl_) public {
-    require(msg.sender == owner);
+    require(msg.sender == contractAdmin);
     compressedSalariesUrl = compressedSalariesUrl_;
   }
 
@@ -423,7 +423,7 @@ contract PgaDfs is usingOraclize {
 
 
   function innerOraclizeQuery(string queryUrl, string callbackAction) public payable {
-    // TODO: make these constants
+    // TODO: make these views
     uint cost = 2400000000000000 + (oraclize_getPrice("URL") * 3);
     uint fee = 100000000000000;
 
@@ -467,7 +467,7 @@ contract PgaDfs is usingOraclize {
   // CRYPTO RIC:
   // breaking down the free "getter" functions
   // into pieces for the compiler's stack
-  function getContestIsLive(string contestId) constant external returns (bool) {
+  function getContestIsLive(string contestId) view external returns (bool) {
     return contests[contestId].live;
   }
 }

@@ -4,7 +4,7 @@ contract Migrations {
   address public owner;
   uint public last_completed_migration;
 
-  Migrations() public {
+  function Migrations() public {
     owner = msg.sender;
   }
 
