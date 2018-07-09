@@ -262,6 +262,18 @@ contract PgaDfs is usingOraclize {
 
   }
 
+  function ToBytes6(string memory source) returns (bytes6 result) {
+    bytes memory tempEmptyStringTest = bytes(source);
+    if (tempEmptyStringTest.length == 0) {
+        return 0x0;
+    }
+
+    assembly {
+        result := mload(add(source, 6))
+    }
+  }
+
+
   function setSalaries(string compressedSalaries) public {
 
     // clear out old golfers (see if this requires a lot of gas?)
@@ -277,7 +289,7 @@ contract PgaDfs is usingOraclize {
 
     for (ii = 0; ii < playerSlices.length; ii++) {
       playerSlices[ii] = compressedSalariesSlice.split(playerDelimiter);
-      bytes6 pgaPlayerId = bytes6(playerSlices[ii].split(":".toSlice()).toString());
+      bytes6 pgaPlayerId = toBytes6(playerSlices[ii].split(":".toSlice()).toString());
       uint32 thursdayTeeTimestamp = uint32(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
       int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
 
@@ -301,7 +313,7 @@ contract PgaDfs is usingOraclize {
 
     for (uint16 i = 0; i < playerScoreSlices.length; i++) {
       playerScoreSlices[i] = compressedScoresSlice.split(playerDelimiter);
-      bytes6 pgaPlayerId = bytes6(playerScoreSlices[i].split(":".toSlice()).toString());
+      bytes6 pgaPlayerId = toBytes6(playerScoreSlices[i].split(":".toSlice()).toString());
       uint roundSlices = playerScoreSlices[i].count("-".toSlice()) + 1;
       for (uint rd = 0; rd < roundSlices; rd++) {
         int8 rdScore = int8(parseInt(playerScoreSlices[i].split("-".toSlice()).toString()));
