@@ -80,12 +80,15 @@ contract PgaDfs is usingOraclize {
   // with the miniumum balance, which can never be recovered
   function PgaDfs() public payable {
     require(msg.value >= minBal);
-    // TODO: tinker with this gas value
-    oraclize_setCustomGasPrice(1000000000 wei);
     // in the constructor (this function), msg.sender is
     // the owner of the contract
     contractAdmin = msg.sender;
     extraEther = msg.value;
+
+    // OAR for ethereum-bridge
+    OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
+    // TODO: tinker with this gas value
+    oraclize_setCustomGasPrice(1000000000 wei);
 
     // execute a dummy transcaction to make fee estimation
     // work by burning the free transaction
@@ -262,7 +265,7 @@ contract PgaDfs is usingOraclize {
 
   }
 
-  function ToBytes6(string memory source) returns (bytes6 result) {
+  function toBytes6(string memory source) returns (bytes6 result) {
     bytes memory tempEmptyStringTest = bytes(source);
     if (tempEmptyStringTest.length == 0) {
         return 0x0;
