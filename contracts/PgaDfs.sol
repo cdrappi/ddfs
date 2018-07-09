@@ -138,8 +138,8 @@ contract PgaDfs is usingOraclize {
   // think mike weir
   int salaryCap = 100;
 
-  // rake is 0.5% or 5/1000
-  uint rakeTimesOneThousand = 5;
+  // rake is 2.0% or 20/1000
+  uint rakeTimesOneThousand = 20;
 
   // is scoring complete for the current tournament
   bool isGolferScoringComplete;
