@@ -83,6 +83,7 @@
 			getAllUsers(callback) {
 				// getting the total number of users stored in the blockchain
 				// calling the method totalUsers from the smart contract
+        // TODO: make dfs
 				window.bc.contract().totalUsers.call((err, total) => {
 					var tot = 0
 					if (total) tot = total.toNumber()
