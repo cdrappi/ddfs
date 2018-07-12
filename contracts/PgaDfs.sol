@@ -132,8 +132,8 @@ contract PgaDfs is usingOraclize {
   mapping(bytes6 => Golfer) pgaIdToGolfer;
 
   // contest data
-  string[] contestIds;
-  mapping(string => Contest) contests;
+  bytes32[] contestIds;
+  mapping(bytes32 => Contest) contests;
 
 
   // salary cap is 100
@@ -174,7 +174,7 @@ contract PgaDfs is usingOraclize {
     return totalSalary <= salaryCap;
   }
 
-  function setAlreadyValidatedLineup(string contestId, bytes6[8] proposedGolferIds, address lineupAddress) public {
+  function setAlreadyValidatedLineup(bytes32 contestId, bytes6[8] proposedGolferIds, address lineupAddress) public {
     // TODO: ENCRYPT THIS LATER w/ Ric's idea
     // EVERYONES LINEUPS ARE PUBLIC DATA RIGHT NOW LOL
     // OR: use the jim hashed lineup trick,
@@ -185,7 +185,7 @@ contract PgaDfs is usingOraclize {
     contest.addressHasEntry[lineupAddress] = true;
   }
 
-  function isNewContestValid(string contestId, address proposedNewOwner) public view returns (bool) {
+  function isNewContestValid(bytes32 contestId, address proposedNewOwner) public view returns (bool) {
     // make sure we aren't overwriting a previously used contestId.
     // however, re-use of contest id is okay.
     // that way, people can remember contest ids and join their fav
@@ -214,7 +214,7 @@ contract PgaDfs is usingOraclize {
     return eth - (eth * rakeTimesOneThousand) / 1000;
   }
 
-  function createContest(string contestId, bytes6[8] proposedGolferIds) public payable {
+  function createContest(bytes32 contestId, bytes6[8] proposedGolferIds) public payable {
     // when you make a contest, you also must make a lineup, and you are auto-joined
     require(isNewContestValid(contestId, msg.sender));
     require(isValidLineup(proposedGolferIds));
@@ -234,18 +234,18 @@ contract PgaDfs is usingOraclize {
     payEntryFeeToContest(contestId, msg.sender, msg.value);
   }
 
-  function enterContest(string contestId, bytes6[8] proposedGolferIds) public payable {
+  function enterContest(bytes32 contestId, bytes6[8] proposedGolferIds) public payable {
     require(isValidLineup(proposedGolferIds));
     payEntryFeeToContest(contestId, msg.sender, msg.value);
     setAlreadyValidatedLineup(contestId, proposedGolferIds, msg.sender);
   }
 
-  function editLineupInContest(string contestId, bytes6[8] proposedGolferIds) public {
+  function editLineupInContest(bytes32 contestId, bytes6[8] proposedGolferIds) public {
     require(isValidLineup(proposedGolferIds));
     setAlreadyValidatedLineup(contestId, proposedGolferIds, msg.sender);
   }
 
-  function payEntryFeeToContest(string contestId, address msgSender, uint ethEntered) public payable {
+  function payEntryFeeToContest(bytes32 contestId, address msgSender, uint ethEntered) public payable {
 
     Contest storage activeContest = contests[contestId];
     if (!activeContest.addressHasEntry[msgSender]) {
@@ -326,7 +326,7 @@ contract PgaDfs is usingOraclize {
     isGolferScoringComplete = true;
   }
 
-  function setSingleContestPayouts(string contestId) public {
+  function setSingleContestPayouts(bytes32 contestId) public {
     // everyone who scores > max(0, the contest average) gets paid
     // you are paid proportional to your squared score
     require(isGolferScoringComplete);
@@ -377,7 +377,7 @@ contract PgaDfs is usingOraclize {
     contest.arePayoutsSet = true;
   }
 
-  function withdrawBalanceFromContest(string contestId) public {
+  function withdrawBalanceFromContest(bytes32 contestId) public {
     Contest storage contest = contests[contestId];
     if (contest.balances[msg.sender] > 0) {
       msg.sender.transfer(contest.balances[msg.sender]);
@@ -385,7 +385,7 @@ contract PgaDfs is usingOraclize {
     }
   }
 
-  function payOutContest(string contestId) public {
+  function payOutContest(bytes32 contestId) public {
     require(isGolferScoringComplete);
 
     Contest storage contest = contests[contestId];
@@ -474,7 +474,7 @@ contract PgaDfs is usingOraclize {
   // CRYPTO RIC:
   // should anyone wish to be a good blockchain citizen
   // and delete a wager that is no longer live
-  function deleteContest(string contestId) external {
+  function deleteContest(bytes32 contestId) external {
     require(!contests[contestId].live);
     delete contests[contestId];
   }
@@ -482,14 +482,14 @@ contract PgaDfs is usingOraclize {
   // CRYPTO RIC:
   // breaking down the free "getter" functions
   // into pieces for the compiler's stack
-  function getContestIsLive(string contestId) view external returns (bool) {
+  function getContestIsLive(bytes32 contestId) view external returns (bool) {
     return contests[contestId].live;
   }
 
   function getLiveContestIds() public returns (string[]) {
-    string[] liveContestIds;
+    bytes32[] liveContestIds;
     for (uint ii = 0; ii < contestIds.length; ii++) {
-      string memory contestId = contestIds[ii];
+      bytes32 memory contestId = contestIds[ii];
       if (contests[contestId].live) {
         liveContestIds.push(contestId);
       }
@@ -497,8 +497,8 @@ contract PgaDfs is usingOraclize {
     return liveContestIds;
   }
 
-  function getContestById(string contestId) public returns (
-      string,
+  function getContestById(bytes32 contestId) public returns (
+      bytes32,
       uint,
       uint,
       address,
