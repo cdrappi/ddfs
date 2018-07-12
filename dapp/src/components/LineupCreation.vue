@@ -24,9 +24,11 @@
 </template>
 
 <script>
+import Multiselect from 'vue-multiselect'
+
 export default {
   components: {
-  	Multiselect: window.VueMultiselect.default
+  	Multiselect
 	},
 	data: {
   	options: [],

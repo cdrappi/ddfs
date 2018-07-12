@@ -488,13 +488,13 @@ contract PgaDfs is usingOraclize {
 
   function getLiveContestIds() public returns (string[]) {
     string[] liveContestIds;
-    for (uint ii = 0; ii < contestIds.length; i++) {
-      memory string contestId = contestIds[ii];
-      if (getContestIsLive(contestId)) {
+    for (uint ii = 0; ii < contestIds.length; ii++) {
+      string memory contestId = contestIds[ii];
+      if (contests[contestId].live) {
         liveContestIds.push(contestId);
       }
     }
-    return returnLiveContestIds;
+    return liveContestIds;
   }
 
   function getContestById(string contestId) public returns (
@@ -504,7 +504,7 @@ contract PgaDfs is usingOraclize {
       address,
       uint
     ) {
-      memory Contest contest = contests[contestId];
+      Contest memory contest = contests[contestId];
       return (
           contest.id,
           contest.entryFee,
