@@ -506,7 +506,7 @@ contract PgaDfs is usingOraclize {
     ) {
       Contest memory contest = contests[contestId];
       return (
-          contest.id,
+          contestId,
           contest.entryFee,
           contest.entries.length,
           contest.owner,
