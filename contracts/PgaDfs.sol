@@ -479,7 +479,7 @@ contract PgaDfs is usingOraclize {
     delete contests[contestId];
   }
 
-  function getLiveContestIds() public returns (bytes32[]) {
+  function getLiveContestIds() public view returns (bytes32[]) {
     bytes32[] liveContestIds;
     for (uint ii = 0; ii < contestIds.length; ii++) {
       bytes32 contestId = contestIds[ii];
@@ -490,7 +490,7 @@ contract PgaDfs is usingOraclize {
     return liveContestIds;
   }
 
-  function getContestById(bytes32 contestId) public returns (
+  function getContestById(bytes32 contestId) public view returns (
       bytes32,
       uint,
       uint,
