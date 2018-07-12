@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import Profile from '@/views/Profile'
 import Lobby from '@/views/Lobby'
 import Register from '@/views/Register'
+import LineupCreation from '@/views/LineupCreation'
 
 Vue.use(Router)
 
@@ -23,6 +24,11 @@ export default new Router({
             name: 'Register',
             component: Register
         },
+        {
+          path: '/create',
+          name: 'LineupCreation',
+          component: LineupCreation
+        }
     ],
     linkActiveClass: 'active'
 })

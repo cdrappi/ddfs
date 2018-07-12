@@ -51,7 +51,7 @@
         },
         methods: {
             /**
-             * Get the list of the registered users once the connection to the
+             * Get the list of all live contests users once the connection to the
              * blockchain is established.
              */
             getContestList() {
@@ -62,45 +62,40 @@
                     clearInterval(this.tmoConn)
                     // TODO: get contests in lobby
                     // getting all the users from the blockchain
-                    this.getAllContests(contest => {
+                    this.getAllLiveContests(contest => {
                         this.isLoading = false
                         this.contests.push(contest)
                     })
                 }
             },
             /**
-             * It reloads the user list.
+             * It reloads the live contest list.
              */
             reloadLobby() {
                 this.contests = []
                 this.getContestList()
             },
-			/**
-			 * Get all users.
-			 */
-			getAllContests(callback) {
-				// getting the total number of users stored in the blockchain
-				// calling the method totalUsers from the smart contract
-        // TODO: make dfs
-				window.bc.contract().totalContests.call((err, total) => {
-					var tot = 0
-					if (total) tot = total.toNumber()
-					if (tot > 0) {
-						// getting the user one by one
-						for (var i=1; i<tot; i++) {
-							window.bc.contract().getUserById.call(i, (error, userProfile) => {
-								callback(userProfile)
-							})
-						} // end for
-					} // end if
-				}) // end totalUsers call
-			}
+      			/**
+      			 * Get all users.
+      			 */
+      			getAllLiveContests(callback) {
+      				// getting the total number of users stored in the blockchain
+      				// calling the method totalUsers from the smart contract
+              // TODO: make dfs
+      				window.bc.contract().getLiveContestIds.call((err, contestIds) => {
+      					for (var ii=1; ii < contestIds.length; ii++) {
+      						window.bc.contract().getContestById.call(contestIds[ii], (error, contestData) => {
+      							callback(contestData)
+      						})
+      					} // end if
+      				}) // end getLiveContestIds call
+      			}
         },
         created() {
             // it tries to get the user list from the blockchian once
             // the connection is established
             this.tmoConn = setInterval(() => {
-                this.getUserList()
+                this.getContestList()
             }, 1000)
         }
     }

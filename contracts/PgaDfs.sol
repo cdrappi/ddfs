@@ -496,4 +496,21 @@ contract PgaDfs is usingOraclize {
     }
     return returnLiveContestIds;
   }
+
+  function getContestById(string contestId) public returns (
+      string,
+      uint,
+      uint,
+      address,
+      uint
+    ) {
+      memory Contest contest = contests[contestId];
+      return (
+          contest.id,
+          contest.entryFee,
+          contest.entries.length,
+          contest.owner,
+          contest.createdTimestamp
+        );
+    }
 }

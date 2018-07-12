@@ -17,16 +17,25 @@ for row in records:
 
 compressed_salaries = ' '.join(compressed_salaries_list)
 
+json_salaries_key = f'jsonSalaries/{year}/{pga_tournament_id}.json'
+compressed_salaries_key = f'compressedSalaries/{year}/{pga_tournament_id}.json'
 
 s3 = create_s3(bucket_name='ethdfs')
+
 s3.write_data(
     data=json.dumps({
         'compressedSalaries': compressed_salaries
     }),
-    key=f'compressedSalaries/{year}/{pga_tournament_id}.json'
+    key=compressed_salaries_key
 )
 
 s3.write_data(
     data=json.dumps(records),
-    key=f'jsonSalaries/{year}/{pga_tournament_id}.json'
+    key=json_salaries_key
 )
+
+def set_public_read(key):
+    s3._bucket.Object(key).Acl().put(ACL='public-read')
+
+set_public_read(json_salaries_key)
+set_public_read(compressed_salaries_key)
