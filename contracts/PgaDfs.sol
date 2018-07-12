@@ -1,4 +1,4 @@
-pragma solidity ^0.4.14;
+pragma solidity 0.4.18;
 
 import "./lib/oraclize/oraclizeAPI_0.4.sol";
 import "./lib/arachnid/solidity-stringutils/strings.sol";
@@ -477,13 +477,6 @@ contract PgaDfs is usingOraclize {
   function deleteContest(bytes32 contestId) external {
     require(!contests[contestId].live);
     delete contests[contestId];
-  }
-
-  // CRYPTO RIC:
-  // breaking down the free "getter" functions
-  // into pieces for the compiler's stack
-  function getContestIsLive(bytes32 contestId) view external returns (bool) {
-    return contests[contestId].live;
   }
 
   function getLiveContestIds() public returns (bytes32[]) {
