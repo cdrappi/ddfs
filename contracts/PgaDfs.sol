@@ -486,7 +486,7 @@ contract PgaDfs is usingOraclize {
     return contests[contestId].live;
   }
 
-  function getLiveContestIds() public returns (string[]) {
+  function getLiveContestIds() public returns (bytes32[]) {
     bytes32[] liveContestIds;
     for (uint ii = 0; ii < contestIds.length; ii++) {
       bytes32 contestId = contestIds[ii];
