@@ -83,11 +83,16 @@
       				// calling the method totalUsers from the smart contract
               // TODO: make dfs
       				window.bc.contract().getLiveContestIds.call((err, contestIds) => {
-      					for (var ii=1; ii < contestIds.length; ii++) {
-      						window.bc.contract().getContestById.call(contestIds[ii], (error, contestData) => {
-      							callback(contestData)
-      						})
-      					} // end if
+								if (err) {
+
+								}
+								else {
+									for (var ii=1; ii < contestIds.length; ii++) {
+										window.bc.contract().getContestById.call(contestIds[ii], (error, contestData) => {
+											callback(contestData)
+										})
+									} // end if
+								}
       				}) // end getLiveContestIds call
       			}
         },

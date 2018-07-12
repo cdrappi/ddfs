@@ -49,12 +49,12 @@
                         clearInterval(this.tmoConn)
                         // showing the connected message on the top bar and setting the class too
                         this.connectedClass = 'text-success'
-                        window.bc.contract().isRegistered.call((error, res) => {
+                        window.bc.contract().getLiveContestIds.call((error, res) => {
                             if (error) {
                                 console.error(error);
                             }
                             else {
-                                this.userIsRegistered = res
+                                this.userIsRegistered = true
                             }
                         })
                     }
