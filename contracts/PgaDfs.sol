@@ -485,4 +485,15 @@ contract PgaDfs is usingOraclize {
   function getContestIsLive(string contestId) view external returns (bool) {
     return contests[contestId].live;
   }
+
+  function getLiveContestIds() public returns (string[]) {
+    string[] liveContestIds;
+    for (uint ii = 0; ii < contestIds.length; i++) {
+      memory string contestId = contestIds[ii];
+      if (getContestIsLive(contestId)) {
+        liveContestIds.push(contestId);
+      }
+    }
+    return returnLiveContestIds;
+  }
 }
