@@ -506,4 +506,8 @@ contract PgaDfs is usingOraclize {
           contest.createdTimestamp
         );
     }
+
+  function testFunction() public view returns (int8) {
+    return 1;
+  }
 }
