@@ -507,7 +507,7 @@ contract PgaDfs is usingOraclize {
         );
     }
 
-  function testFunction() public view returns (int8) {
-    return 1;
+  function testFunction() public view returns (string) {
+    return 'test';
   }
 }
