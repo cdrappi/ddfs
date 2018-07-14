@@ -1,6 +1,20 @@
 <template>
 <div id="app">
-  <multiselect :options="options" :value="optionsProxy" @input="updateSelected" @search-change="searchQuery" :multiple="true" :searchable="true" :close-on-select="true" placeholder="Search" :custom-label="customLabel" :loading="showLoadingSpinner"></multiselect>
+  <multiselect
+    :options="options"
+    :value="optionsProxy"
+    @input="updateSelected"
+    @search-change="searchQuery"
+    :multiple="true"
+    :searchable="true"
+    :close-on-select="true"
+    placeholder="Search"
+    :custom-label="customLabel"
+    :loading="showLoadingSpinner"
+    :limit="10"
+    :options-limit="50"
+  >
+  </multiselect>
 
   <ul class="resources-list">
     <template v-for="(resource, index) in selectedResources">
@@ -44,6 +58,7 @@ export default {
   },
   computed: {
     disableSubmit() {
+      // disable submit if ANY of these are true
         return (
              this.salarySum(this.selectedResources) > 100
           || !this.uniqueGolfers(this.selectedResources)
@@ -72,6 +87,14 @@ export default {
         seenGolferIds[pgaId] = null;
       }
       return true;
+    },
+    golferIdSet (golfers) {
+      var golferIdsObject = {};
+      for (var ii = 1; ii < golfers.length; ii++) {
+        var pgaId = golfers[ii].pga_id
+        golferIdsObject[pgaId] = null;
+      }
+      return golferIdsObject
     },
      performSubmit() {
        this.submitting = true
@@ -114,8 +137,15 @@ export default {
       this.optionsProxy = []
     },
     cdnRequest(value) {
-      console.log('cdn request')
       this.options = getGolfers();
+      // var allGolfers = getGolfers();
+      // var selectedGolferIds = this.golferIdSet(this.selectedResources);
+      // // console.log(selectedGolferIds)
+      // for (var ii=1; ii < allGolfers.length; ii++) {
+      //   // if (!(allGolfers[ii].pga_id in selectedGolferIds)) {
+      //   this.options.push(allGolfers[ii])
+      //   // }
+      // }
       // TODO: get data from endpoint
     	// this.$http.get('https://s3.amazonaws.com/ethdfs/jsonSalaries/2018/490.json').then((response) => {
       //   // get body data
