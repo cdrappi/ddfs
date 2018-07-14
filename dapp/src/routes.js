@@ -1,8 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Lobby from '@/views/Lobby'
-import Lineup from '@/views/Lineup'
-import LineupCreation from '@/views/LineupCreation'
+import Lineup3 from '@/views/Lineup3'
 
 Vue.use(Router)
 
@@ -19,14 +18,9 @@ export default new Router({
             component: Lobby
         },
         {
-            path: '/lineup',
-            name: 'Lineup',
-            component: Lineup
-        },
-        {
-          path: '/lineup2',
-          name: 'Lineup2',
-          component: LineupCreation
+          path: '/lineup3',
+          name: 'Lineup3',
+          component: Lineup3
         },
         // {
         //   path: '/sweat',
