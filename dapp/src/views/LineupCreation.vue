@@ -15,6 +15,9 @@
         </div>
       </li>
     </template>
+    <button class="btn btn-primary" :disabled="disableSubmit" @click="performSubmit">Save to blockchain</button>
+      <strong v-show="submitting">Submitting...</strong>
+      <strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
   </ul>
 </div>
 </template>
@@ -31,10 +34,63 @@ export default {
       	options: [],
         optionsProxy: [],
         selectedResources: [],
-        showLoadingSpinner: false
+        showLoadingSpinner: false,
+        submitting: false,
+        errorSubmit: false,
+        successMessage: false
 	   }
   },
+  computed: {
+    disableSubmit() {
+        return (this.salarySum(this.selectedResources) > 100 || !this.selectedResources.length > 8 || !this.selectedResources.length < 3 || this.submitting || !this.blockchainIsConnected())
+    }
+  },
   methods: {
+    salarySum (golfers) {
+      var sum = 0;
+      for (var ii = 1; ii < golfers.length; ii++) {
+        sum += golfers[ii].eth_salary;
+      }
+      return sum;
+    },
+    uniqueGolfers (golfers) {
+      var seenGolferIds = {};
+      for (var ii = 1; ii < golfers.length; ii++) {
+        if (golfers[ii].pga_id in seenGolferIds) {
+          return false;
+        }
+        seenGolferIds.push(golfers[ii].pga_id);
+      }
+      return true;
+    },
+     performSubmit() {
+       this.submitting = true
+       this.errorSubmit = false
+       this.successMessage = false
+       // calling the function registerUser of the smart contract
+       // window.bc.contract().registerUser(
+       //     this.userName,
+       //     this.userStatus,
+       //     {
+       //         from: window.bc.web3().eth.coinbase,
+       //         gas: 800000
+       //     },
+       //     (err, txHash) => {
+       //         if (err) {
+       //             console.error(err)
+       //             this.errorSubmit = true
+       //         }
+       //         else {
+       //             this.successMessage = true
+       //             // it emits a global event in order to update the top menu bar
+       //             Event.$emit('userregistered', txHash);
+       //             // the transaction was submitted and the user will be redirected to the
+       //             // profile page once the block will be mined
+       //             this.redirectWhenBlockMined()
+       //         }
+       //     }
+       // )
+    },
   	customLabel (option) {
       return `${option.name} (${option.pga_id}) Ξ${option.eth_salary}`
     },
@@ -48,6 +104,7 @@ export default {
       this.optionsProxy = []
     },
     cdnRequest(value) {
+      console.log('cdn request')
       this.options = getGolfers();
       // TODO: get data from endpoint
     	// this.$http.get('https://s3.amazonaws.com/ethdfs/jsonSalaries/2018/490.json').then((response) => {
