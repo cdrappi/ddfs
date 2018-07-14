@@ -1,16 +1,16 @@
 <template>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <ul class="navbar-nav">
-            <router-link tag="li" class="nav-link" to="/" exact>
+            <!-- <router-link tag="li" class="nav-link" to="/" exact>
                 <a>Statuses</a>
+            </router-link> -->
+
+            <router-link tag="li" class="nav-link" to="/lobby" exact>
+                <a>Lobby</a>
             </router-link>
 
-            <router-link tag="li" class="nav-link" to="/profile" exact v-show="userIsRegistered">
-                <a>Profile</a>
-            </router-link>
-
-            <router-link tag="li" class="nav-link" to="/register" exact v-show="!userIsRegistered">
-                <a><strong>Register</strong></a>
+            <router-link tag="li" class="nav-link" to="/lineup" exact>
+                <a><strong>Lineup</strong></a>
             </router-link>
 
             <li class="nav-link"></li>
@@ -49,14 +49,14 @@
                         clearInterval(this.tmoConn)
                         // showing the connected message on the top bar and setting the class too
                         this.connectedClass = 'text-success'
-                        window.bc.contract().getLiveContestIds.call((error, res) => {
-                            if (error) {
-                                console.error(error);
-                            }
-                            else {
-                                this.userIsRegistered = true
-                            }
-                        })
+                        // window.bc.contract().testFunction.call((error, res) => {
+                        //     if (error) {
+                        //         console.error(error);
+                        //     }
+                        //     else {
+                        //         this.userIsRegistered = true
+                        //     }
+                        // })
                     }
                 }, 500)
             },
@@ -76,7 +76,8 @@
             checkUntilUserIsRegistered() {
                 this.tmoReg = setInterval(() => {
                     if (this.blockchainIsConnected()) {
-                        window.bc.contract().isRegistered.call((error, res) => {
+                        console.log('calling testfunction topmenu L79')
+                        window.bc.contract().testFunction.call((error, res) => {
                             if (error) {
                                 console.error(error)
                             }

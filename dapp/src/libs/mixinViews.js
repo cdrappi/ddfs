@@ -29,6 +29,7 @@ let mixinViews = {
                     // calling a smart contract function in order to check the contract address
                     // is correct. NOTE: here you might be connected successfully.
                     // TODO: the check of the smart contract address validity it should be BcExplorer duty
+                    console.log('calling testfunction mixinviews L33')
                     window.bc.contract().testFunction.call((errorReg, res) => {
                         if (errorReg) {
                             this.bcConnectionError = true

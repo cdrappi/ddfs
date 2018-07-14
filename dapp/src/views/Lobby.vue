@@ -75,25 +75,28 @@
                 this.contests = []
                 this.getContestList()
             },
-      			/**
-      			 * Get all users.
-      			 */
       			getAllLiveContests(callback) {
       				// getting the total number of users stored in the blockchain
       				// calling the method totalUsers from the smart contract
-              // TODO: make dfs
-      				window.bc.contract().getLiveContestIds.call((err, contestIds) => {
-								if (err) {
-
-								}
-								else {
-									for (var ii=1; ii < contestIds.length; ii++) {
-										window.bc.contract().getContestById.call(contestIds[ii], (error, contestData) => {
-											callback(contestData)
-										})
-									} // end if
-								}
-      				}) // end getLiveContestIds call
+              // TODO: make contract calls work
+							console.log('calling getLiveContestIds lobby L86')
+							for (var ii=1; ii < 5; ii++) {
+								callback( [ii, 5, ii * ii, '0x0', 1531530612] )
+							}
+      				// window.bc.contract().getLiveContestIds.call((err, contestIds) => {
+							// 	if (err) {
+							// 		console.log(err)
+							// 	}
+							// 	else {
+							// 		console.log(contestIds)
+							// 		for (var ii=1; ii < contestIds.length; ii++) {
+							// 			console.log('calling getContestById lobby L93')
+							// 			window.bc.contract().getContestById.call(contestIds[ii], (error, contestData) => {
+							// 				callback(contestData)
+							// 			})
+							// 		} // end if
+							// 	}
+      				// }) // end getLiveContestIds call
       			}
         },
         created() {

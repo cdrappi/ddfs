@@ -1,9 +1,8 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Profile from '@/views/Profile'
 import Lobby from '@/views/Lobby'
-import Register from '@/views/Register'
-import LineupCreation from '@/components/LineupCreation'
+import Lineup from '@/views/Lineup'
+import LineupCreation from '@/views/LineupCreation'
 
 Vue.use(Router)
 
@@ -15,18 +14,18 @@ export default new Router({
             component: Lobby
         },
         {
-            path: '/profile',
-            name: 'Profile',
-            component: Profile
+            path: '/lobby',
+            name: 'Lobby',
+            component: Lobby
         },
         {
-            path: '/register',
-            name: 'Register',
-            component: Register
+            path: '/lineup',
+            name: 'Lineup',
+            component: Lineup
         },
         {
-          path: '/create',
-          name: 'LineupCreation',
+          path: '/lineup2',
+          name: 'Lineup2',
           component: LineupCreation
         }
     ],
