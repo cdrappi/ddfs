@@ -34,10 +34,11 @@ let mixinViews = {
                         if (errorReg) {
                             this.bcConnectionError = true
                             this.bcSmartContractAddressError = true
-                            console.log(errorReg)
+                            console.error('error calling testfunction mixinviews L33', errorReg)
                         }
                         else {
                             this.bcConnectionError = false
+                            console.log('success calling testfunction mixinviews L33')
                         }
 
                         this.bcConnected = this.blockchainIsConnected()

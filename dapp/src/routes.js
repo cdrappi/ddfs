@@ -8,11 +8,11 @@ Vue.use(Router)
 
 export default new Router({
     routes: [
-        {
-            path: '/',
-            name: 'Lobby',
-            component: Lobby
-        },
+        // {
+        //     path: '/',
+        //     name: 'Lobby',
+        //     component: Lobby
+        // },
         {
             path: '/lobby',
             name: 'Lobby',
@@ -27,7 +27,12 @@ export default new Router({
           path: '/lineup2',
           name: 'Lineup2',
           component: LineupCreation
-        }
+        },
+        // {
+        //   path: '/sweat',
+        //   name: 'Sweat',
+        //   component: Sweat,
+        // }
     ],
     linkActiveClass: 'active'
 })

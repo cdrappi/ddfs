@@ -64,6 +64,7 @@
                 this.errorSubmit = false
                 this.successMessage = false
                 // calling the function registerUser of the smart contract
+								console.log('calling register user lineup.vue L67')
                 window.bc.contract().registerUser(
                     this.userName,
                     this.userStatus,
