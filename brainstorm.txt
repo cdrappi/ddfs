@@ -1,0 +1,13 @@
+MVP includes:
+
+1 lineup per week
+play as many contests as you want
+
+contract:
+- submit single lineup hash for each user
+
+views:
+– Lineup view (create, edit, reveal)
+- Lobby view (join contests w/ lineup hash)
+- Sweat view (DK's currently winning page, linking to contests)
+- Contest view (sweat view over single contest)
