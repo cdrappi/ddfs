@@ -25,7 +25,9 @@
 <script>
 import Multiselect from 'vue-multiselect'
 import getGolfers from '../libs/getGolfers'
+import mixin from '../libs/mixinViews'
 export default {
+  mixins: [mixin],
   components: {
   	Multiselect
 	},
@@ -42,7 +44,14 @@ export default {
   },
   computed: {
     disableSubmit() {
-        return (this.salarySum(this.selectedResources) > 100 || !this.selectedResources.length > 8 || !this.selectedResources.length < 3 || this.submitting || !this.blockchainIsConnected())
+        return (
+             this.salarySum(this.selectedResources) > 100
+          || !this.uniqueGolfers(this.selectedResources)
+          || this.selectedResources.length > 8
+          || this.selectedResources.length < 3
+          || this.submitting
+          || !this.blockchainIsConnected()
+        )
     }
   },
   methods: {
@@ -56,10 +65,11 @@ export default {
     uniqueGolfers (golfers) {
       var seenGolferIds = {};
       for (var ii = 1; ii < golfers.length; ii++) {
-        if (golfers[ii].pga_id in seenGolferIds) {
+        var pgaId = golfers[ii].pga_id
+        if (pgaId in seenGolferIds) {
           return false;
         }
-        seenGolferIds.push(golfers[ii].pga_id);
+        seenGolferIds[pgaId] = null;
       }
       return true;
     },
