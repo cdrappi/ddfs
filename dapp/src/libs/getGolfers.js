@@ -1,4 +1,40 @@
-export default function getGolfers() {
+function getPgaCookieName() {
+    return 'pga-r2018/490';
+}
+
+function getCookie(name) {
+    var value = "; " + document.cookie;
+    var parts = value.split("; " + name + "=");
+    if (parts.length == 2) {
+        return parts.pop().split(";").shift();
+    }
+    return '';
+}
+
+function getPgaIdsFromCookie() {
+    var lineupCookie = getCookie(getPgaCookieName());
+    if (lineupCookie) {
+        return lineupCookie.split(':')
+    } else {
+        return []
+    }
+}
+
+function getSelectedGolfersFromCookie() {
+    var allGolfers = getGolfers();
+    var pgaIdsFromCookie = getPgaIdsFromCookie();
+    var selectedGolfersFromCookie = [];
+    var index;
+    for (index in allGolfers) {
+        var golfer = allGolfers[index];
+        if (pgaIdsFromCookie.indexOf(String(golfer.pga_id)) > -1) {
+            selectedGolfersFromCookie.push(golfer)
+        }
+    }
+    return selectedGolfersFromCookie
+}
+
+function getGolfers() {
   return [
     {
         "name": "Tony Finau",
@@ -878,3 +914,5 @@ export default function getGolfers() {
     }
   ]
 }
+
+export {getGolfers, getSelectedGolfersFromCookie, getPgaCookieName};

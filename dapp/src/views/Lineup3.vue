@@ -62,7 +62,7 @@
 <script>
   import Multiselect from 'vue-multiselect'
   import mixin from '../libs/mixinViews'
-  import getGolfers from '../libs/getGolfers'
+  import {getGolfers, getSelectedGolfersFromCookie, getPgaCookieName} from '../libs/getGolfers'
   import Web3 from 'web3';
   var web3 = new Web3();
   export default {
@@ -70,12 +70,12 @@
     components: { Multiselect },
     data () {
       return {
-        selectedResources: [],
-        options: getGolfers(),
-        optionsProxy: [],
-        submitting: false,
-        errorSubmit: false,
-        successMessage: false,
+          options: getGolfers(),
+          selectedResources: getSelectedGolfersFromCookie(),
+          optionsProxy: [],
+          submitting: false,
+          errorSubmit: false,
+          successMessage: false,
       }
     },
     computed: {
@@ -138,6 +138,11 @@
             this.successMessage = false
             // calling the function registerUser of the smart contract
             console.log('calling saveLineupHash L98')
+
+            // save map of lineup hash to player ids in cookie
+            // so it can be easily revealed later
+            document.cookie = getPgaCookieName() + '=' + this.getPlayerIdsForLineupHash();
+            this.submitting = false
             // window.bc.contract().saveLineupHash(
             //     this.userName,
             //     this.userStatus,
