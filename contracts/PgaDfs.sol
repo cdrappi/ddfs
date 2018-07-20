@@ -44,16 +44,15 @@ contract PgaDfs is usingOraclize {
     bool live;
 
     // have we calculated the addressBalances after contest is over?
-    bool arePayoutsSet; // TODO: delete
     mapping (slateId => bool) slateIdToPayoutsSet;
 
     // map ETH address --> lineup in contest
     address[] entries;  // TODO: DELETE
     mapping (bytes12 => address[]) slateIdToEntries;
 
-    mapping(address => bool) addressHasEntry; // TODO: delete
-    mapping(address => Lineup) lineups;
-    mapping(address => int) entryScores;
+    mapping (bytes12 => mapping(address => bool)) slateIdToEntered;
+    mapping(address => Lineup) lineups;  // TODO: delete
+    mapping(address => int) entryScores;  // TODO: delete
 
     // ETH address --> how much they recouped
     // once we confirmed the event ends, then payout!
@@ -144,7 +143,7 @@ contract PgaDfs is usingOraclize {
   // slate id ==> pga tour id ==> golfer data (salary, scores, etc.)
   mapping(bytes12 => mapping(bytes6 => Golfer)) slateIdToSalaries;
 
-  mapping(bytes12 => Golfer) slateIdToSalaries[slateId];  // TODO: DELETE
+  mapping(bytes12 => Golfer) slateIdToSalaries[slateId];
 
   mapping bytes12 => (mapping address => Lineup) slateIdToLineups;
 
@@ -163,75 +162,44 @@ contract PgaDfs is usingOraclize {
   // is scoring complete for the current slate
   mapping (bytes12 ==> bool) slateIdToCompleteScoring;
 
-  function isValidLineup(bytes6[8] proposedGolferIds) public view returns (bool) {
-
-    uint lineupLength = proposedGolferIds.length;
-    if (lineupLength > 8) {
-      // you can play at most 8 guys
-      // does the type in function arg already prevent this?
-      return false;
-    }
-
-    int16 totalSalary = 0;
-    for (uint8 ii = 0; ii < lineupLength; ii++) {
-      totalSalary += slateIdToSalaries[slateId][proposedGolferIds[ii]].salary;
-    }
-
-    // and if you have 8 or less guys, their total salary
-    // must be less than or equal to the cap
-    return totalSalary <= salaryCap;
-  }
-
   function setLineupHash(bytes32 lineupHash) public {
     // can't change lineup hash after lock
     require(block.timestamp <= slateIdToLockTimestamp[slateId]);
-    slateIdToLineups[slateId][msg.sender] = lineupHash;
+    slateIdToLineups[slateId][msg.sender] = Lineup({golferIdsHash: lineupHash});
   }
 
-  function setAlreadyValidatedLineup(bytes32 contestId, bytes6[8] proposedGolferIds, address lineupAddress) public {
-    // TODO: ENCRYPT THIS LATER w/ Ric's idea
-    // EVERYONES LINEUPS ARE PUBLIC DATA RIGHT NOW LOL
-    // OR: use the jim hashed lineup trick,
-    // united with a really good frontend
-    // for revealing the lineup you have
-    Contest storage contest = contests[contestId];
-    contest.lineups[lineupAddress] = Lineup({golferIds : proposedGolferIds});
-    contest.addressHasEntry[lineupAddress] = true;
-  }
+  function revealLineup(string golferIdsColonDelimited) public {
+    require(slateIdToLineups[slateId][msg.sender].golferIdsHash == keccak(golferIdsColonDelimited));
 
-  function isNewContestValid(bytes32 contestId, address proposedNewOwner) public view returns (bool) {
-    // make sure we aren't overwriting a previously used contestId.
-    // however, re-use of contest id is okay.
-    // that way, people can remember contest ids and join their fav
-    // contests without having to look for a link
-    if (contests[contestId].owner) {
-      Contest memory oldContest = contests[contestId];
+    var golferIds = new bytes6[](8);
 
-      if (oldContest.live) {
-        // you can't re-create a live contest.
-        // prevents contest owners from
-        // effectively deleting a contest
-        return false;
-      }
+    var golferIdsSlice = golferIdsColonDelimited.toSlice();
+    var delimiter = ":".toSlice();
+    var golferCount = golferIdsSlice.count(delimiter) + 1;
 
-      // if we have a contest, check that the
-      // owner is the only one re-using it.
-      return (oldContest.owner == proposedNewOwner);
-    } else {
-      // if a contest with this contestId does not exist,
-      // then yes we can create it
-      return true;
+    // must have 8 or less players
+    require(golferCount <= 8);
+
+    // and salary must be under cap
+    var totalSalary = 0;
+    for (ii = 0; ii < golferCount; ii++) {
+      golferIds[ii] = toBytes6(golferIdsSlice.split(playerDelimiter).toString());
+      totalSalary += slateIdToSalaries[slateId][golferids[ii]].salary;
     }
+    require(totalSalary <= salaryCap);
+
+    slateIdToLineups[slateId][msg.sender].golferIds = golferIds;
   }
 
   function calculateRake(uint eth) public view returns (uint) {
     return eth - (eth * rakeTimesOneThousand) / 1000;
   }
 
-  function createContest(bytes32 contestId, bytes6[8] proposedGolferIds) public payable {
-    // when you make a contest, you also must make a lineup, and you are auto-joined
-    require(isNewContestValid(contestId, msg.sender));
-    require(isValidLineup(proposedGolferIds));
+  function createContest(bytes32 contestId) public payable {
+    // contest id cannot be taken already
+    require(!contests[contestId]);
+    // contest owner must first have lineup hash on chain
+    require(slateIdToLineups[slateId][msg.sender]);
 
     contestIds.push(contestId);
     contests[contestId] = Contest({
@@ -243,21 +211,16 @@ contract PgaDfs is usingOraclize {
     payEntryFeeToContest(contestId, msg.sender, msg.value);
   }
 
-  function enterContest(bytes32 contestId, bytes6[8] proposedGolferIds) public payable {
-    require(isValidLineup(proposedGolferIds));
+  function enterContest(bytes32 contestId) public payable {
+    // to enter contest, user must have lineup hash on chain
+    require(slateIdToLineups[slateId][msg.sender]);
     payEntryFeeToContest(contestId, msg.sender, msg.value);
-    setAlreadyValidatedLineup(contestId, proposedGolferIds, msg.sender);
-  }
-
-  function editLineupInContest(bytes32 contestId, bytes6[8] proposedGolferIds) public {
-    require(isValidLineup(proposedGolferIds));
-    setAlreadyValidatedLineup(contestId, proposedGolferIds, msg.sender);
   }
 
   function payEntryFeeToContest(bytes32 contestId, address msgSender, uint ethEntered) public payable {
 
     Contest storage activeContest = contests[contestId];
-    if (!activeContest.addressHasEntry[msgSender]) {
+    if (!activeContest.slateIdToEntered[slateId][msgSender]) {
       // if they not are already in the contest, pay rake and enter
       uint rakeToCollect = calculateRake(ethEntered);
 
@@ -335,7 +298,7 @@ contract PgaDfs is usingOraclize {
 
     Contest storage contest = contests[contestId];
     require(contest.live);
-    require(!contest.arePayoutsSet);
+    require(!contest.slateIdToPayoutsSet[slateId]);
 
     int32 totalEntries = int32(contest.entries.length);
     int totalPoints = 0;
@@ -376,7 +339,7 @@ contract PgaDfs is usingOraclize {
       contest.balances[entry] += toPayout;
     }
 
-    contest.arePayoutsSet = true;
+    contest.slateIdToPayoutsSet[slateId] = true;
   }
 
   function withdrawBalanceFromContest(bytes32 contestId) public {
@@ -391,7 +354,7 @@ contract PgaDfs is usingOraclize {
     require(slateIdToCompleteScoring[slateId]);
 
     Contest storage contest = contests[contestId];
-    require(contest.arePayoutsSet);
+    require(contest.slateIdToPayoutsSet[slateId]);
     require(contest.live);
 
     for (uint ii = 0; ii < contest.entries.length; ii++) {
@@ -401,7 +364,6 @@ contract PgaDfs is usingOraclize {
         contest.balances[msg.sender] = 0;
       }
     }
-
     contest.live = false;
   }
 
