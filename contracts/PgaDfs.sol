@@ -141,8 +141,8 @@ contract PgaDfs is usingOraclize {
   // slate id ==> golfer ids
   mapping (bytes12 => bytes6[]) slateIdToGolferIds;
   // slate id ==> pga tour id ==> golfer data (salary, scores, etc.)
-  mapping(bytes12 => mapping(bytes6 => SlateGolfer)) slateIdToSlateGolfers;
-  mapping bytes12 => (mapping address => Lineup) slateIdToLineups;
+  mapping (bytes12 => mapping(bytes6 => SlateGolfer)) slateIdToSlateGolfers;
+  mapping (bytes12 => mapping (address => Lineup)) slateIdToLineups;
 
   // contest data
   bytes32[] contestIds;
