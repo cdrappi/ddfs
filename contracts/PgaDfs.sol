@@ -314,7 +314,7 @@ contract PgaDfs is usingOraclize {
     // calculate the average score in the contest
     for (uint8 ii = 0; ii < totalEntries; ii++) {
       address entry = contest.slateIdToEntries[slateId][ii];
-      bytes6[8] memory entryPgaIds = slateIdToLineups[slateId][entry];
+      bytes6[8] memory entryPgaIds = slateIdToLineups[slateId][entry].golferIds;
       for (uint8 g = 0; g < entryPgaIds.length; g++) {
         contestEntryScores[entry] += slateIdToSlateGolfers[slateId][entryPgaIds[g]].points;
       }
@@ -464,7 +464,7 @@ contract PgaDfs is usingOraclize {
   }
 
   function getLiveContestIds() public view returns (bytes32[]) {
-    bytes32[] memory liveContestIds;
+    bytes32[] liveContestIds;  // why must use storage?
     for (uint ii = 0; ii < contestIds.length; ii++) {
       bytes32 contestId = contestIds[ii];
       if (contests[contestId].live) {
@@ -478,10 +478,9 @@ contract PgaDfs is usingOraclize {
       bytes32,
       uint,
       uint,
-      address,
-      uint
+      address
     ) {
-      Contest memory contest = contests[contestId];
+      Contest storage contest = contests[contestId];
       return (
           contestId,
           contest.entryFee,
