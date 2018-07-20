@@ -130,7 +130,12 @@
             this.selectedResources.splice(index, 1)
         },
         formatResource(resource) {
-            return resource.eth_salary + '   -   ' + resource.pga_id + ': ' + resource.name
+          return (
+            resource.eth_salary
+            + '   -   '
+            + resource.pga_id
+             + ': ' + resource.name
+          )
         },
         performSubmit() {
             this.submitting = true
@@ -141,7 +146,10 @@
 
             // save map of lineup hash to player ids in cookie
             // so it can be easily revealed later
-            document.cookie = getPgaCookieName() + '=' + this.getPlayerIdsForLineupHash();
+            document.cookie = (
+              getPgaCookieName(window.bc.web3().eth.coinbase)
+              + '=' + this.getPlayerIdsForLineupHash()
+            );
             this.submitting = false
             // window.bc.contract().saveLineupHash(
             //     this.userName,

@@ -1,5 +1,5 @@
-function getPgaCookieName() {
-    return 'pga-r2018/490';
+function getPgaCookieName(address) {
+    return address + '/pga-r2018-490';
 }
 
 function getCookie(name) {
