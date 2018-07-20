@@ -39,6 +39,10 @@
     <strong v-show="submitting">Submitting...</strong>
     <strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
 
+    <button class="btn btn-secondary" :disabled="disableSubmit" @click="saveToCookie">Save locally</button>
+    <strong v-show="submitting">Saving ...</strong>
+    <strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
+
     <br>
     <br>
     <br>
@@ -71,7 +75,9 @@
     data () {
       return {
           options: getGolfers(),
-          selectedResources: getSelectedGolfersFromCookie(),
+          selectedResources: getSelectedGolfersFromCookie(
+            window.bc.web3().eth.coinbase
+          ),
           optionsProxy: [],
           submitting: false,
           errorSubmit: false,
@@ -137,6 +143,14 @@
              + ': ' + resource.name
           )
         },
+        saveToCookie() {
+          // save map of lineup hash to player ids in cookie
+          // so it can be easily revealed later
+          document.cookie = (
+            getPgaCookieName(window.bc.web3().eth.coinbase)
+            + '=' + this.getPlayerIdsForLineupHash()
+          );
+        },
         performSubmit() {
             this.submitting = true
             this.errorSubmit = false
@@ -144,12 +158,7 @@
             // calling the function registerUser of the smart contract
             console.log('calling saveLineupHash L98')
 
-            // save map of lineup hash to player ids in cookie
-            // so it can be easily revealed later
-            document.cookie = (
-              getPgaCookieName(window.bc.web3().eth.coinbase)
-              + '=' + this.getPlayerIdsForLineupHash()
-            );
+            this.saveToCookie()
             this.submitting = false
             // window.bc.contract().saveLineupHash(
             //     this.userName,

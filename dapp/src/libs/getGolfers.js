@@ -11,8 +11,8 @@ function getCookie(name) {
     return '';
 }
 
-function getPgaIdsFromCookie() {
-    var lineupCookie = getCookie(getPgaCookieName());
+function getPgaIdsFromCookie(address) {
+    var lineupCookie = getCookie(getPgaCookieName(address));
     if (lineupCookie) {
         return lineupCookie.split(':')
     } else {
@@ -20,9 +20,9 @@ function getPgaIdsFromCookie() {
     }
 }
 
-function getSelectedGolfersFromCookie() {
+function getSelectedGolfersFromCookie(address) {
     var allGolfers = getGolfers();
-    var pgaIdsFromCookie = getPgaIdsFromCookie();
+    var pgaIdsFromCookie = getPgaIdsFromCookie(address);
     var selectedGolfersFromCookie = [];
     var index;
     for (index in allGolfers) {
