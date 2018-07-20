@@ -128,6 +128,7 @@ contract PgaDfs is usingOraclize {
 
   // active slate id to key slate/lineup mappings
   bytes12 slateId;
+  mapping (bytes12 => uint) slateIdToLockTimestamp;
 
   // format: "{pgaId}:{salary}"
   // example: "34360:1522955700:15 32102:1522963620:-2" <-- salaries can be negative!
@@ -143,7 +144,9 @@ contract PgaDfs is usingOraclize {
   // slate id ==> pga tour id ==> golfer data (salary, scores, etc.)
   mapping(bytes12 => mapping(bytes6 => Golfer)) slateIdToSalaries;
 
-  mapping(bytes6 => Golfer) slateIdToSalaries[slateId];  // TODO: DELETE
+  mapping(bytes12 => Golfer) slateIdToSalaries[slateId];  // TODO: DELETE
+
+  mapping bytes12 => (mapping address => Lineup) slateIdToLineups;
 
   // contest data
   bytes32[] contestIds;
@@ -177,6 +180,12 @@ contract PgaDfs is usingOraclize {
     // and if you have 8 or less guys, their total salary
     // must be less than or equal to the cap
     return totalSalary <= salaryCap;
+  }
+
+  function setLineupHash(bytes32 lineupHash) public {
+    // can't change lineup hash after lock
+    require(block.timestamp <= slateIdToLockTimestamp[slateId]);
+    slateIdToLineups[slateId][msg.sender] = lineupHash;
   }
 
   function setAlreadyValidatedLineup(bytes32 contestId, bytes6[8] proposedGolferIds, address lineupAddress) public {
@@ -410,29 +419,15 @@ contract PgaDfs is usingOraclize {
 
   function setNewSlateInfo(
     bytes12 newSlateId_,
+    uint lockTimestamp,
     string compressedSalariesUrl_,
     string compressedScoresUrl
   ) public {
     require(msg.sender == contractAdmin);
-    setSlateId(newSlateId_);
-    setCompressedSalariesUrl(compressedSalariesUrl_);
-    setCompressedScoresUrl(compressedScoresUrl_);
-  }
-
-  function setSlateId(bytes12 newSlateId_) public {
-    require(msg.sender == contractAdmin);
     slateId = newSlateId;
-  }
-
-  // change the compressed scores URL endpoint
-  function setCompressedScoresUrl(string compressedScoresUrl_) public {
-    require(msg.sender == contractAdmin);
-    compressedScoresUrl = compressedScoresUrl_;
-  }
-
-  function setCompressedSalariesUrl(string compressedSalariesUrl_) public {
-    require(msg.sender == contractAdmin);
+    slateIdToLockTimestamp[slateId] = lockTimestamp;
     compressedSalariesUrl = compressedSalariesUrl_;
+    compressedScoresUrl = compressedScoresUrl_;
   }
 
   function getSalariesOnChain() public payable {
@@ -440,7 +435,7 @@ contract PgaDfs is usingOraclize {
   }
 
   function getScoresOnChain() public payable {
-    innerOraclizeQuery(compressedScoresUrl, "scores");
+    innerOraclizeQuery(compressedScoresUrl, "Scores");
   }
 
   // ========================= ORACLIZE functions =========================
@@ -475,7 +470,7 @@ contract PgaDfs is usingOraclize {
     if (actionHash == keccak256("Salaries")) {
       setSalaries(result);
     }
-    if (actionHash == keccak256("scores")) {
+    if (actionHash == keccak256("Scores")) {
       setScores(result);
     }
   }
