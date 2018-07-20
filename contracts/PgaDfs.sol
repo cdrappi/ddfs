@@ -52,6 +52,7 @@ contract PgaDfs is usingOraclize {
     mapping (bytes12 => address[]) slateIdToEntries;
 
     mapping (bytes12 => mapping(address => bool)) slateIdToEntered;
+    mapping (bytes12 => mapping(address => int16)) slateIdToAddressScores;
 
     // ETH address --> how much they recouped
     // once we confirmed the event ends, then payout!
@@ -182,16 +183,14 @@ contract PgaDfs is usingOraclize {
     // must have 8 or less players
     require(golferCount <= 8);
 
-    // must not repeat the same 2 players
-    mapping (bytes6 => bool) alreadyHasGolfer;
-
     // and salary must be under cap
     int16 totalSalary = 0;
     for (uint8 ii = 0; ii < golferCount; ii++) {
       bytes6 golferId = toBytes6(golferIdsSlice.split(delimiter).toString());
-      require(!alreadyHasGolfer[golferId]);
+      for (uint jj = 0; jj < golferIds.length; jj++) {
+        require(golferId != golferIds[jj])
+      }
       golferIds[ii] = golferId;
-      alreadyHasGolfer[golferId] = true;
       totalSalary += slateIdToSlateGolfers[slateId][golferId].salary;
     }
     require(totalSalary <= salaryCap);
@@ -313,7 +312,6 @@ contract PgaDfs is usingOraclize {
     require(contest.live);
     require(!contest.slateIdToPayoutsSet[slateId]);
 
-    mapping (address => int16) contestEntryScores;
     int32 totalEntries = int32(contest.slateIdToEntries[slateId].length);
     int totalPoints = 0;
 
@@ -322,9 +320,9 @@ contract PgaDfs is usingOraclize {
       address entry = contest.slateIdToEntries[slateId][ii];
       bytes6[8] memory entryPgaIds = slateIdToLineups[slateId][entry].golferIds;
       for (uint8 g = 0; g < entryPgaIds.length; g++) {
-        contestEntryScores[entry] += slateIdToSlateGolfers[slateId][entryPgaIds[g]].points;
+        slateIdToAddressScores[slateId][entry] += slateIdToSlateGolfers[slateId][entryPgaIds[g]].points;
       }
-      totalPoints += contestEntryScores[entry];
+      totalPoints += slateIdToAddressScores[slateId][entry];
     }
 
     // of the top half (except any of those that scored < 0),
@@ -336,8 +334,8 @@ contract PgaDfs is usingOraclize {
 
     for (ii = 0; ii < totalEntries; ii++) {
       entry = contest.slateIdToEntries[slateId][ii];
-      if (contestEntryScores[entry] >= averagePointsRoundedDown && contestEntryScores[entry] >= 0) {
-        uint squaredScore = uint(contestEntryScores[entry] * contestEntryScores[entry]);
+      if (slateIdToAddressScores[slateId][entry] >= averagePointsRoundedDown && slateIdToAddressScores[slateId][entry] >= 0) {
+        uint squaredScore = uint(slateIdToAddressScores[slateId][entry] * slateIdToAddressScores[slateId][entry]);
         winningEntries.push(entry);
         summedSquaredWinningScores += squaredScore;
       }
@@ -348,7 +346,7 @@ contract PgaDfs is usingOraclize {
       entry = winningEntries[ii];
       // TODO: make sure there's no rounding error B.S. going on
       // that makes us massively over or under pay people
-      squaredScore = uint(contestEntryScores[entry] * contestEntryScores[entry]);
+      squaredScore = uint(slateIdToAddressScores[slateId][entry] * slateIdToAddressScores[slateId][entry]);
       uint toPayout = (contest.prizePool * squaredScore) / summedSquaredWinningScores;
       contest.balances[entry] += toPayout;
     }
