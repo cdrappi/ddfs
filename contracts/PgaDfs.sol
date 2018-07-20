@@ -165,6 +165,10 @@ contract PgaDfs is usingOraclize {
     slateIdToLineups[slateId][msg.sender] = Lineup({golferIdsHash: lineupHash});
   }
 
+  // lineups must:
+  // have 8 or less players
+  // total salary must be <= salary cap
+  // can only play the same guy once
   function revealLineup(string golferIdsColonDelimited) public {
     require(slateIdToLineups[slateId][msg.sender].golferIdsHash == keccak(golferIdsColonDelimited));
 
