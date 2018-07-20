@@ -7,7 +7,7 @@ contract PgaDfs is usingOraclize {
 
   using strings for *;
 
-  struct Golfer {
+  struct SlateGolfer {
     // not storing name,
     // since we're trying to be minimal with data storage
     // on ethereum's bloated ass blockchain.
@@ -141,9 +141,9 @@ contract PgaDfs is usingOraclize {
   // slate id ==> golfer ids
   mapping (bytes12 => bytes6[]) slateIdToGolferIds;
   // slate id ==> pga tour id ==> golfer data (salary, scores, etc.)
-  mapping(bytes12 => mapping(bytes6 => Golfer)) slateIdToSalaries;
+  mapping(bytes12 => mapping(bytes6 => SlateGolfer)) slateIdToSalaries;
 
-  mapping(bytes12 => Golfer) slateIdToSalaries[slateId];
+  mapping(bytes12 => SlateGolfer) slateIdToSalaries[slateId];
 
   mapping bytes12 => (mapping address => Lineup) slateIdToLineups;
 
@@ -263,7 +263,7 @@ contract PgaDfs is usingOraclize {
       int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
 
       slateIdToGolferIds[slateId][ii] = pgaPlayerId;
-      slateIdToSalaries[slateId][pgaPlayerId] = Golfer({
+      slateIdToSalaries[slateId][pgaPlayerId] = SlateGolfer({
           salary : salary,
           points : 0
         });
