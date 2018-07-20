@@ -51,7 +51,7 @@ contract PgaDfs is usingOraclize {
     mapping (bytes12 => address[]) slateIdToEntries;
 
     mapping (bytes12 => mapping(address => bool)) slateIdToEntered;
-    mapping(address => Lineup) lineups;  // TODO: delete
+
     mapping(address => int) entryScores;  // TODO: delete
 
     // ETH address --> how much they recouped
@@ -307,6 +307,7 @@ contract PgaDfs is usingOraclize {
     require(contest.live);
     require(!contest.slateIdToPayoutsSet[slateId]);
 
+    mapping (address => int10) contestEntryScores;
     int32 totalEntries = int32(contest.slateIdToEntries[slateId].length);
     int totalPoints = 0;
 
@@ -315,9 +316,9 @@ contract PgaDfs is usingOraclize {
       address entry = contest.contest.slateIdToEntries[slateId][ii];
       bytes6[8] memory entryPgaIds = slateIdToLineups[slateId][entry];
       for (uint8 g = 0; g < entryPgaIds.length; g++) {
-        contest.entryScores[entry] += slateIdToSlateGolfers[slateId][entryPgaIds[g]].points;
+        contestEntryScores[entry] += slateIdToSlateGolfers[slateId][entryPgaIds[g]].points;
       }
-      totalPoints += contest.entryScores[entry];
+      totalPoints += contestEntryScores[entry];
     }
 
     // of the top half (except any of those that scored < 0),
@@ -329,8 +330,8 @@ contract PgaDfs is usingOraclize {
 
     for (ii = 0; ii < totalEntries; ii++) {
       entry = contest.slateIdToEntries[slateId][ii];
-      if (contest.entryScores[entry] >= averagePointsRoundedDown && contest.entryScores[entry] >= 0) {
-        uint squaredScore = uint(contest.entryScores[entry] * contest.entryScores[entry]);
+      if (contestEntryScores[entry] >= averagePointsRoundedDown && contestEntryScores[entry] >= 0) {
+        uint squaredScore = uint(contestEntryScores[entry] * contestEntryScores[entry]);
         winningEntries.push(entry);
         summedSquaredWinningScores += squaredScore;
       }
@@ -341,7 +342,7 @@ contract PgaDfs is usingOraclize {
       entry = winningEntries[ii];
       // TODO: make sure there's no rounding error B.S. going on
       // that makes us massively over or under pay people
-      squaredScore = uint(contest.entryScores[entry] * contest.entryScores[entry]);
+      squaredScore = uint(contestEntryScores[entry] * contestEntryScores[entry]);
       uint toPayout = (contest.prizePool * squaredScore) / summedSquaredWinningScores;
       contest.balances[entry] += toPayout;
     }
