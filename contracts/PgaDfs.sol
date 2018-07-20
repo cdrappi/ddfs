@@ -225,7 +225,7 @@ contract PgaDfs is usingOraclize {
   function enterContest(bytes32 contestId) public payable {
     // to enter contest, user must have lineup hash on chain
     Lineup memory entrantLineup = slateIdToLineups[slateId][msg.sender];
-    require(entrantLineup.golferIdsHash);
+    require(entrantLineup.submittedHash);
     payEntryFeeToContest(contestId, msg.sender, msg.value);
   }
 
