@@ -35,24 +35,23 @@ contract PgaDfs is usingOraclize {
   struct Contest {
     address owner; // creator of contest
 
-    bool isContest; // true always
-
-    uint entryFee; // TODO(christian): what units?
-    uint prizePool; // all money in contest balance, payable to winners
+    uint entryFee; // TODO(christian): what units? wei?
+    uint prizePool; // TODO: delete
+    // all money in contest balance, payable to winners
+    mapping (bytes12 => uint) slateIdToPrizePool;
 
     // yay or nay, is this an active contest
     bool live;
 
     // have we calculated the addressBalances after contest is over?
-    bool arePayoutsSet;
-
-    // when this was created
-    uint createdTimestamp;
+    bool arePayoutsSet; // TODO: delete
+    mapping (slateId => bool) slateIdToPayoutsSet;
 
     // map ETH address --> lineup in contest
-    address[] entries;
+    address[] entries;  // TODO: DELETE
+    mapping (bytes12 => address[]) slateIdToEntries;
 
-    mapping(address => bool) addressHasEntry;
+    mapping(address => bool) addressHasEntry; // TODO: delete
     mapping(address => Lineup) lineups;
     mapping(address => int) entryScores;
 
@@ -151,7 +150,6 @@ contract PgaDfs is usingOraclize {
   bytes32[] contestIds;
   mapping(bytes32 => Contest) contests;
 
-
   // salary cap is 100
   // salaries are integers and CAN BE NEGATIVE
   // think mike weir
@@ -162,7 +160,6 @@ contract PgaDfs is usingOraclize {
 
   // is scoring complete for the current slate
   mapping (bytes12 ==> bool) slateIdToCompleteScoring;
-  bool isGolferScoringComplete;  // TODO: DELETE
 
   function isValidLineup(bytes6[8] proposedGolferIds) public view returns (bool) {
 
@@ -199,7 +196,7 @@ contract PgaDfs is usingOraclize {
     // however, re-use of contest id is okay.
     // that way, people can remember contest ids and join their fav
     // contests without having to look for a link
-    if (contests[contestId].isContest) {
+    if (contests[contestId].owner) {
       Contest memory oldContest = contests[contestId];
 
       if (oldContest.live) {
@@ -233,12 +230,7 @@ contract PgaDfs is usingOraclize {
       owner : msg.sender,
       // entry fee is AUTOMATICALLY calculated by how much the owner deposits
       entryFee : msg.value - calculateRake(msg.value),
-      createdTimestamp : block.timestamp,
       live : true,
-      arePayoutsSet : false,
-      isContest : true,
-      prizePool : 0,
-      entries : new address[](0)
     });
     payEntryFeeToContest(contestId, msg.sender, msg.value);
   }
@@ -293,7 +285,7 @@ contract PgaDfs is usingOraclize {
       delete pgaIdToGolfer[pgaIdsInSalaries[ii]];
       delete pgaIdsInSalaries[ii];
     }
-    isGolferScoringComplete = false;
+    slateIdToCompleteScoring[slateId] = false;
 
     var compressedSalariesSlice = compressedSalaries.toSlice();
     var playerDelimiter = " ".toSlice();
@@ -315,7 +307,7 @@ contract PgaDfs is usingOraclize {
   function setScores(string compressedScores) public {
     // TODO: really make sure this works
     // TODO: difference between var and normal types?
-    require(!isGolferScoringComplete);
+    require(!slateIdToCompleteScoring[slateId]);
 
     var compressedScoresSlice = compressedScores.toSlice();
     var playerDelimiter = " ".toSlice();
@@ -330,13 +322,13 @@ contract PgaDfs is usingOraclize {
         pgaIdToGolfer[pgaPlayerId].points += int8(80) - rdScore;
       }
     }
-    isGolferScoringComplete = true;
+    slateIdToCompleteScoring[slateId] = true;
   }
 
   function setSingleContestPayouts(bytes32 contestId) public {
     // everyone who scores > max(0, the contest average) gets paid
     // you are paid proportional to your squared score
-    require(isGolferScoringComplete);
+    require(slateIdToCompleteScoring[slateId]);
 
     Contest storage contest = contests[contestId];
     require(contest.live);
@@ -393,7 +385,7 @@ contract PgaDfs is usingOraclize {
   }
 
   function payOutContest(bytes32 contestId) public {
-    require(isGolferScoringComplete);
+    require(slateIdToCompleteScoring[slateId]);
 
     Contest storage contest = contests[contestId];
     require(contest.arePayoutsSet);
@@ -499,6 +491,8 @@ contract PgaDfs is usingOraclize {
   // and delete a wager that is no longer live
   function deleteContest(bytes32 contestId) external {
     require(!contests[contestId].live);
+    // can't delete someone else's contest
+    require(msg.sender == contests[contestId].owner);
     delete contests[contestId];
   }
 
@@ -525,8 +519,7 @@ contract PgaDfs is usingOraclize {
           contestId,
           contest.entryFee,
           contest.entries.length,
-          contest.owner,
-          contest.createdTimestamp
+          contest.owner
         );
     }
 
