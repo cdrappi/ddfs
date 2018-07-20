@@ -160,10 +160,8 @@ contract PgaDfs is usingOraclize {
   function setLineupHash(bytes32 lineupHash) public {
     // can't change lineup hash after lock
     require(block.timestamp <= slateIdToLockTimestamp[slateId]);
-    slateIdToLineups[slateId][msg.sender] = Lineup({
-      golferIdsHash: lineupHash,
-      golferIds: new bytes6[](0)  // to be revealed later
-    });
+    Lineup storage theLineup = slateIdToLineups[slateId][msg.sender];
+    theLineup.golferIdsHash = lineupHash;
   }
 
   // lineups must:
