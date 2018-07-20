@@ -143,8 +143,7 @@ contract PgaDfs is usingOraclize {
   // slate id ==> pga tour id ==> golfer data (salary, scores, etc.)
   mapping(bytes12 => mapping(bytes6 => Golfer)) slateIdToSalaries;
 
-  bytes6[] pgaIdsInSalaries;  // TODO: DELETE
-  mapping(bytes6 => Golfer) pgaIdToGolfer;  // TODO: DELETE
+  mapping(bytes6 => Golfer) slateIdToSalaries[slateId];  // TODO: DELETE
 
   // contest data
   bytes32[] contestIds;
@@ -172,7 +171,7 @@ contract PgaDfs is usingOraclize {
 
     int16 totalSalary = 0;
     for (uint8 ii = 0; ii < lineupLength; ii++) {
-      totalSalary += pgaIdToGolfer[proposedGolferIds[ii]].salary;
+      totalSalary += slateIdToSalaries[slateId][proposedGolferIds[ii]].salary;
     }
 
     // and if you have 8 or less guys, their total salary
@@ -280,11 +279,6 @@ contract PgaDfs is usingOraclize {
 
   function setSalaries(string compressedSalaries) public {
 
-    // clear out old golfers (see if this requires a lot of gas?)
-    for (uint16 ii = 0; ii < pgaIdsInSalaries.length; ii++) {
-      delete pgaIdToGolfer[pgaIdsInSalaries[ii]];
-      delete pgaIdsInSalaries[ii];
-    }
     slateIdToCompleteScoring[slateId] = false;
 
     var compressedSalariesSlice = compressedSalaries.toSlice();
@@ -296,8 +290,8 @@ contract PgaDfs is usingOraclize {
       bytes6 pgaPlayerId = toBytes6(playerSlices[ii].split(":".toSlice()).toString());
       int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
 
-      pgaIdsInSalaries[ii] = pgaPlayerId;
-      pgaIdToGolfer[pgaPlayerId] = Golfer({
+      slateIdToGolferIds[slateId][ii] = pgaPlayerId;
+      slateIdToSalaries[slateId][pgaPlayerId] = Golfer({
           salary : salary,
           points : 0
         });
@@ -319,7 +313,7 @@ contract PgaDfs is usingOraclize {
       uint roundSlices = playerScoreSlices[i].count("-".toSlice()) + 1;
       for (uint rd = 0; rd < roundSlices; rd++) {
         int8 rdScore = int8(parseInt(playerScoreSlices[i].split("-".toSlice()).toString()));
-        pgaIdToGolfer[pgaPlayerId].points += int8(80) - rdScore;
+        slateIdToSalaries[slateId][pgaPlayerId].points += int8(80) - rdScore;
       }
     }
     slateIdToCompleteScoring[slateId] = true;
@@ -342,7 +336,7 @@ contract PgaDfs is usingOraclize {
       address entry = contest.entries[ii];
       bytes6[8] memory entryPgaIds = contest.lineups[entry].golferIds;
       for (uint8 g = 0; g < entryPgaIds.length; g++) {
-        contest.entryScores[entry] += pgaIdToGolfer[entryPgaIds[g]].points;
+        contest.entryScores[entry] += slateIdToSalaries[slateId][entryPgaIds[g]].points;
       }
       totalPoints += contest.entryScores[entry];
     }
