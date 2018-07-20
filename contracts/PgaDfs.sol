@@ -184,7 +184,7 @@ contract PgaDfs is usingOraclize {
 
     // and salary must be under cap
     var totalSalary = 0;
-    for (ii = 0; ii < golferCount; ii++) {
+    for (uint4 ii = 0; ii < golferCount; ii++) {
       bytes6 golferId = toBytes6(golferIdsSlice.split(playerDelimiter).toString());
       require(!alreadyHasGolfer[golferId]);
       golferIds[ii] = golferId;
@@ -242,7 +242,8 @@ contract PgaDfs is usingOraclize {
 
   }
 
-  function toBytes6(string memory source) returns (bytes6 result) {
+  // convert a string to bytes6 type using assembly
+  function toBytes6(string memory source) public returns (bytes6 result) {
     bytes memory tempEmptyStringTest = bytes(source);
     if (tempEmptyStringTest.length == 0) {
         return 0x0;
@@ -373,15 +374,31 @@ contract PgaDfs is usingOraclize {
     contest.live = false;
   }
 
+  function _setCompressedScoresUrl(string _compressedScoresUrl) internal {
+    compressedScoresUrl = _compressedScoresUrl;
+  }
+
+  function _setCompressedSalariesUrl(string _compressedSalariesUrl) internal {
+    compressedSalariesUrl = _compressedSalariesUrl;
+  }
+
+  function getSalariesOnChain() public payable {
+    innerOraclizeQuery(compressedSalariesUrl, "Salaries");
+  }
+
+  function getScoresOnChain() public payable {
+    innerOraclizeQuery(compressedScoresUrl, "Scores");
+  }
+
   function setScoresUrlAndGetResultsOnChain(string compressedScoresUrl_) public {
       require(msg.sender == contractAdmin);
-      setCompressedScoresUrl(compressedScoresUrl_);
+      _setCompressedScoresUrl(compressedScoresUrl_);
       getScoresOnChain();
   }
 
   function setSalariesUrlAndGetSalariesOnChain(string compressedSalariesUrl_) public {
       require(msg.sender == contractAdmin);
-      setCompressedSalariesUrl(compressedSalariesUrl_);
+      _setCompressedSalariesUrl(compressedSalariesUrl_);
       getSalariesOnChain();
   }
 
@@ -394,16 +411,8 @@ contract PgaDfs is usingOraclize {
     require(msg.sender == contractAdmin);
     slateId = _newSlateId;
     slateIdToLockTimestamp[slateId] = lockTimestamp;
-    compressedSalariesUrl = _compressedSalariesUrl;
-    compressedScoresUrl = _compressedScoresUrl;
-  }
-
-  function getSalariesOnChain() public payable {
-    innerOraclizeQuery(compressedSalariesUrl, "Salaries");
-  }
-
-  function getScoresOnChain() public payable {
-    innerOraclizeQuery(compressedScoresUrl, "Scores");
+    _setCompressedScoresUrl(_compressedScoresUrl);
+    _setCompressedSalariesUrl(_compressedSalariesUrl);
   }
 
   // ========================= ORACLIZE functions =========================
