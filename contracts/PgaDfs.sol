@@ -23,6 +23,7 @@ contract PgaDfs is usingOraclize {
 
 
   struct Lineup {
+    bool submittedHash;  // true when saved
     // keccak hash of lineup before revealing
     // e.g. keccak256("21059:94320:85933")
     bytes32 golferIdsHash;
@@ -162,6 +163,7 @@ contract PgaDfs is usingOraclize {
     require(block.timestamp <= slateIdToLockTimestamp[slateId]);
     Lineup storage theLineup = slateIdToLineups[slateId][msg.sender];
     theLineup.golferIdsHash = lineupHash;
+    theLineup.submittedHash = true;
   }
 
   // lineups must:
@@ -207,7 +209,7 @@ contract PgaDfs is usingOraclize {
     // contest id cannot be taken already
     require(!contests[contestId].live);
     // contest owner must first have lineup hash on chain
-    require(slateIdToLineups[slateId][msg.sender]);
+    require(slateIdToLineups[slateId][msg.sender].submittedHash);
 
     contestIds.push(contestId);
     contests[contestId] = Contest({
