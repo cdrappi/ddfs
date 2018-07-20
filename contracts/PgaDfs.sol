@@ -24,7 +24,7 @@ contract PgaDfs is usingOraclize {
 
   struct Lineup {
     // keccak hash of lineup before revealing
-    // e.g. keccak("21059:94320:85933")
+    // e.g. keccak256("21059:94320:85933")
     bytes32 golferIdsHash;
     // MAX of 8 pga tour ids...
     // you can play less than 8 guys if you want!
@@ -157,7 +157,7 @@ contract PgaDfs is usingOraclize {
   uint rakeTimesOneThousand = 20;
 
   // is scoring complete for the current slate
-  mapping (bytes12 ==> bool) slateIdToCompleteScoring;
+  mapping (bytes12 => bool) slateIdToCompleteScoring;
 
   function setLineupHash(bytes32 lineupHash) public {
     // can't change lineup hash after lock
@@ -170,7 +170,7 @@ contract PgaDfs is usingOraclize {
   // total salary must be <= salary cap
   // can only play the same guy once
   function revealLineup(string golferIdsColonDelimited) public {
-    require(slateIdToLineups[slateId][msg.sender].golferIdsHash == keccak(golferIdsColonDelimited));
+    require(slateIdToLineups[slateId][msg.sender].golferIdsHash == keccak256(golferIdsColonDelimited));
 
     var golferIds = new bytes6[](8);
 
@@ -213,7 +213,7 @@ contract PgaDfs is usingOraclize {
       owner : msg.sender,
       // entry fee is AUTOMATICALLY calculated by how much the owner deposits
       entryFee : msg.value - calculateRake(msg.value),
-      live : true,
+      live : true
     });
     payEntryFeeToContest(contestId, msg.sender, msg.value);
   }
@@ -388,16 +388,16 @@ contract PgaDfs is usingOraclize {
   }
 
   function setNewSlateInfo(
-    bytes12 newSlateId_,
-    uint lockTimestamp,
-    string compressedSalariesUrl_,
-    string compressedScoresUrl
+    bytes12 _newSlateId,
+    string _compressedSalariesUrl,
+    string _compressedScoresUrl,
+    uint lockTimestamp
   ) public {
     require(msg.sender == contractAdmin);
-    slateId = newSlateId;
+    slateId = _newSlateId;
     slateIdToLockTimestamp[slateId] = lockTimestamp;
-    compressedSalariesUrl = compressedSalariesUrl_;
-    compressedScoresUrl = compressedScoresUrl_;
+    compressedSalariesUrl = _compressedSalariesUrl;
+    compressedScoresUrl = _compressedScoresUrl;
   }
 
   function getSalariesOnChain() public payable {
@@ -456,7 +456,7 @@ contract PgaDfs is usingOraclize {
   }
 
   function getLiveContestIds() public view returns (bytes32[]) {
-    bytes32[] liveContestIds;
+    bytes32[] memory liveContestIds;
     for (uint ii = 0; ii < contestIds.length; ii++) {
       bytes32 contestId = contestIds[ii];
       if (contests[contestId].live) {
