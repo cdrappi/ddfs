@@ -188,7 +188,7 @@ contract PgaDfs is usingOraclize {
     for (uint8 ii = 0; ii < golferCount; ii++) {
       bytes6 golferId = toBytes6(golferIdsSlice.split(delimiter).toString());
       for (uint jj = 0; jj < golferIds.length; jj++) {
-        require(golferId != golferIds[jj])
+        require(golferId != golferIds[jj]);
       }
       golferIds[ii] = golferId;
       totalSalary += slateIdToSlateGolfers[slateId][golferId].salary;
