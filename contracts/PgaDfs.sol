@@ -52,8 +52,6 @@ contract PgaDfs is usingOraclize {
 
     mapping (bytes12 => mapping(address => bool)) slateIdToEntered;
 
-    mapping(address => int) entryScores;  // TODO: delete
-
     // ETH address --> how much they recouped
     // once we confirmed the event ends, then payout!
     mapping(address => uint) balances;
