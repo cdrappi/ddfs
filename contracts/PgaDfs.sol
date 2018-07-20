@@ -160,7 +160,10 @@ contract PgaDfs is usingOraclize {
   function setLineupHash(bytes32 lineupHash) public {
     // can't change lineup hash after lock
     require(block.timestamp <= slateIdToLockTimestamp[slateId]);
-    slateIdToLineups[slateId][msg.sender] = Lineup({golferIdsHash: lineupHash});
+    slateIdToLineups[slateId][msg.sender] = Lineup({
+      golferIdsHash: lineupHash,
+      golferIds: new bytes6[](0)  // to be revealed later
+    });
   }
 
   // lineups must:
@@ -193,7 +196,9 @@ contract PgaDfs is usingOraclize {
     }
     require(totalSalary <= salaryCap);
 
-    slateIdToLineups[slateId][msg.sender].golferIds = golferIds;
+    for (ii = 0; ii < golferIds.length; ii++) {
+      slateIdToLineups[slateId][msg.sender].golferIds[ii] = golferIds[ii];
+    }
   }
 
   function calculateRake(uint eth) public view returns (uint) {
@@ -202,7 +207,7 @@ contract PgaDfs is usingOraclize {
 
   function createContest(bytes32 contestId) public payable {
     // contest id cannot be taken already
-    require(!contests[contestId]);
+    require(!contests[contestId].live);
     // contest owner must first have lineup hash on chain
     require(slateIdToLineups[slateId][msg.sender]);
 
