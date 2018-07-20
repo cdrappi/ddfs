@@ -17,18 +17,18 @@ contract PgaDfs is usingOraclize {
     // and can be negative!
     int8 salary;
 
-    // thursday tee times for late swap-ability
-    // (which will cost a transaction fee! LOL!)
-    uint32 thursdayTeeTimestamp;
-
     // fantasy points at end of tournament
     int8 points;
   }
 
 
   struct Lineup {
+    // keccak hash of lineup before revealing
+    // e.g. keccak("21059:94320:85933")
+    bytes32 golferIdsHash;
     // MAX of 8 pga tour ids...
     // you can play less than 8 guys if you want!
+    // e.g. ["21059", "94320", "85933"]
     bytes6[8] golferIds;
   }
 
@@ -76,7 +76,7 @@ contract PgaDfs is usingOraclize {
   mapping(bytes32 => string) queryIdToCallbackAction;
 
   // this is the CONSTRUCTOR!
-  // we must initialize the lubricaiton amount
+  // we must initialize the lubrication amount
   // with the miniumum balance, which can never be recovered
   function PgaDfs() public payable {
     require(msg.value >= minBal);
@@ -127,9 +127,25 @@ contract PgaDfs is usingOraclize {
     }
   }
 
-  // pga tour id ==> golfer data (salary, scores, etc.)
-  bytes6[] pgaIdsInSalaries;
-  mapping(bytes6 => Golfer) pgaIdToGolfer;
+  // active slate id to key slate/lineup mappings
+  bytes12 slateId;
+
+  // format: "{pgaId}:{salary}"
+  // example: "34360:1522955700:15 32102:1522963620:-2" <-- salaries can be negative!
+  string compressedSalariesUrl = ""; // e.g. "https://s3.amazonaws.com/ethdfs/pga/compressedSalaries/2018/471.json";
+
+  // format: "{pgaId}:{rd1}-{rd2}-{rd3}-{rd4}"
+  // example: "34360:69-66-67-71 32102:70-72-65-67"
+  string compressedScoresUrl = ""; // e.g. "https://s3.amazonaws.com/ethdfs/pga/compressedScores/2018/471.json";
+
+
+  // slate id ==> golfer ids
+  mapping (bytes12 => bytes6[]) slateIdToGolferIds;
+  // slate id ==> pga tour id ==> golfer data (salary, scores, etc.)
+  mapping(bytes12 => mapping(bytes6 => Golfer)) slateIdToSalaries;
+
+  bytes6[] pgaIdsInSalaries;  // TODO: DELETE
+  mapping(bytes6 => Golfer) pgaIdToGolfer;  // TODO: DELETE
 
   // contest data
   bytes32[] contestIds;
@@ -144,16 +160,9 @@ contract PgaDfs is usingOraclize {
   // rake is 2.0% or 20/1000
   uint rakeTimesOneThousand = 20;
 
-  // is scoring complete for the current tournament
-  bool isGolferScoringComplete;
-
-  // format: "{pgaId}:{thursdayTeeTimestamp}:{salary}"
-  // example: "34360:1522955700:15 32102:1522963620:-2" <-- salaries can be negative!
-  string compressedSalariesUrl = ""; // e.g. "https://s3.amazonaws.com/ethdfs/pga/compressedSalaries/2018/471.json";
-
-  // format: "{pgaId}:{rd1}-{rd2}-{rd3}-{rd4}"
-  // example: "34360:69-66-67-71 32102:70-72-65-67"
-  string compressedScoresUrl = ""; // e.g. "https://s3.amazonaws.com/ethdfs/pga/compressedScores/2018/471.json";
+  // is scoring complete for the current slate
+  mapping (bytes12 ==> bool) slateIdToCompleteScoring;
+  bool isGolferScoringComplete;  // TODO: DELETE
 
   function isValidLineup(bytes6[8] proposedGolferIds) public view returns (bool) {
 
@@ -293,13 +302,11 @@ contract PgaDfs is usingOraclize {
     for (ii = 0; ii < playerSlices.length; ii++) {
       playerSlices[ii] = compressedSalariesSlice.split(playerDelimiter);
       bytes6 pgaPlayerId = toBytes6(playerSlices[ii].split(":".toSlice()).toString());
-      uint32 thursdayTeeTimestamp = uint32(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
       int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
 
       pgaIdsInSalaries[ii] = pgaPlayerId;
       pgaIdToGolfer[pgaPlayerId] = Golfer({
           salary : salary,
-          thursdayTeeTimestamp : thursdayTeeTimestamp,
           points : 0
         });
     }
@@ -411,8 +418,24 @@ contract PgaDfs is usingOraclize {
 
   function setSalariesUrlAndGetSalariesOnChain(string compressedSalariesUrl_) public {
       require(msg.sender == contractAdmin);
-      setcompressedSalariesUrl(compressedSalariesUrl_);
+      setCompressedSalariesUrl(compressedSalariesUrl_);
       getSalariesOnChain();
+  }
+
+  function setNewSlateInfo(
+    bytes12 newSlateId_,
+    string compressedSalariesUrl_,
+    string compressedScoresUrl
+  ) public {
+    require(msg.sender == contractAdmin);
+    setSlateId(newSlateId_);
+    setCompressedSalariesUrl(compressedSalariesUrl_);
+    setCompressedScoresUrl(compressedScoresUrl_);
+  }
+
+  function setSlateId(bytes12 newSlateId_) public {
+    require(msg.sender == contractAdmin);
+    slateId = newSlateId;
   }
 
   // change the compressed scores URL endpoint
@@ -421,7 +444,7 @@ contract PgaDfs is usingOraclize {
     compressedScoresUrl = compressedScoresUrl_;
   }
 
-  function setcompressedSalariesUrl(string compressedSalariesUrl_) public {
+  function setCompressedSalariesUrl(string compressedSalariesUrl_) public {
     require(msg.sender == contractAdmin);
     compressedSalariesUrl = compressedSalariesUrl_;
   }
