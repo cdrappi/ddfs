@@ -183,7 +183,7 @@ contract PgaDfs is usingOraclize {
     mapping (bytes6 => bool) alreadyHasGolfer;
 
     // and salary must be under cap
-    var totalSalary = 0;
+    int16 totalSalary = 0;
     for (uint8 ii = 0; ii < golferCount; ii++) {
       bytes6 golferId = toBytes6(golferIdsSlice.split(delimiter).toString());
       require(!alreadyHasGolfer[golferId]);
@@ -211,6 +211,7 @@ contract PgaDfs is usingOraclize {
       owner : msg.sender,
       // entry fee is AUTOMATICALLY calculated by how much the owner deposits
       entryFee : msg.value - calculateRake(msg.value),
+      prizePool: 0, // updated in payEntryFeeToContest below
       live : true
     });
     payEntryFeeToContest(contestId, msg.sender, msg.value);
@@ -464,7 +465,7 @@ contract PgaDfs is usingOraclize {
   }
 
   function getLiveContestIds() public view returns (bytes32[]) {
-    bytes32[] liveContestIds;  // why must use storage?
+    bytes32[] storage liveContestIds;  // why must use storage?
     for (uint ii = 0; ii < contestIds.length; ii++) {
       bytes32 contestId = contestIds[ii];
       if (contests[contestId].live) {
