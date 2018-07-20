@@ -25,13 +25,7 @@
 
     <br>
     <div>
-        PLAYER IDS:
-        <br>{{ this.getPlayerIdsForLineupHash() }}
-    </div>
-    <br>
-    <div>
-        LINEUP HASH:
-        <br>{{ this.getLineupHash() }}
+      {{ this.getPlayerIdsForLineupHash() }} ==> {{ this.getLineupHash() }}
     </div>
     <br>
     <br>
