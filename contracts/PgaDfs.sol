@@ -41,13 +41,13 @@ contract PgaDfs is usingOraclize {
     mapping (bytes12 => uint) slateIdToPrizePool;
 
     // yay or nay, is this an active contest
+    // must be not live to delete contest
     bool live;
 
-    // have we calculated the addressBalances after contest is over?
-    mapping (slateId => bool) slateIdToPayoutsSet;
+    // have we calculated the address balances after contest is over?
+    mapping (bytes12 => bool) slateIdToPayoutsSet;
 
     // map ETH address --> lineup in contest
-    address[] entries;  // TODO: DELETE
     mapping (bytes12 => address[]) slateIdToEntries;
 
     mapping (bytes12 => mapping(address => bool)) slateIdToEntered;
@@ -141,10 +141,7 @@ contract PgaDfs is usingOraclize {
   // slate id ==> golfer ids
   mapping (bytes12 => bytes6[]) slateIdToGolferIds;
   // slate id ==> pga tour id ==> golfer data (salary, scores, etc.)
-  mapping(bytes12 => mapping(bytes6 => SlateGolfer)) slateIdToSalaries;
-
-  mapping(bytes12 => SlateGolfer) slateIdToSalaries[slateId];
-
+  mapping(bytes12 => mapping(bytes6 => SlateGolfer)) slateIdToSlateGolfers;
   mapping bytes12 => (mapping address => Lineup) slateIdToLineups;
 
   // contest data
@@ -180,11 +177,17 @@ contract PgaDfs is usingOraclize {
     // must have 8 or less players
     require(golferCount <= 8);
 
+    // must not repeat the same 2 players
+    mapping (bytes6 => bool) alreadyHasGolfer;
+
     // and salary must be under cap
     var totalSalary = 0;
     for (ii = 0; ii < golferCount; ii++) {
-      golferIds[ii] = toBytes6(golferIdsSlice.split(playerDelimiter).toString());
-      totalSalary += slateIdToSalaries[slateId][golferids[ii]].salary;
+      bytes6 golferId = toBytes6(golferIdsSlice.split(playerDelimiter).toString());
+      require(!alreadyHasGolfer[golferId]);
+      golferIds[ii] = golferId;
+      alreadyHasGolfer[golferId] = true;
+      totalSalary += slateIdToSlateGolfers[slateId][golferids[ii]].salary;
     }
     require(totalSalary <= salaryCap);
 
@@ -263,7 +266,7 @@ contract PgaDfs is usingOraclize {
       int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
 
       slateIdToGolferIds[slateId][ii] = pgaPlayerId;
-      slateIdToSalaries[slateId][pgaPlayerId] = SlateGolfer({
+      slateIdToSlateGolfers[slateId][pgaPlayerId] = SlateGolfer({
           salary : salary,
           points : 0
         });
@@ -285,7 +288,7 @@ contract PgaDfs is usingOraclize {
       uint roundSlices = playerScoreSlices[i].count("-".toSlice()) + 1;
       for (uint rd = 0; rd < roundSlices; rd++) {
         int8 rdScore = int8(parseInt(playerScoreSlices[i].split("-".toSlice()).toString()));
-        slateIdToSalaries[slateId][pgaPlayerId].points += int8(80) - rdScore;
+        slateIdToSlateGolfers[slateId][pgaPlayerId].points += int8(80) - rdScore;
       }
     }
     slateIdToCompleteScoring[slateId] = true;
@@ -300,15 +303,15 @@ contract PgaDfs is usingOraclize {
     require(contest.live);
     require(!contest.slateIdToPayoutsSet[slateId]);
 
-    int32 totalEntries = int32(contest.entries.length);
+    int32 totalEntries = int32(contest.slateIdToEntries[slateId].length);
     int totalPoints = 0;
 
     // calculate the average score in the contest
     for (uint8 ii = 0; ii < totalEntries; ii++) {
-      address entry = contest.entries[ii];
-      bytes6[8] memory entryPgaIds = contest.lineups[entry].golferIds;
+      address entry = contest.contest.slateIdToEntries[slateId][ii];
+      bytes6[8] memory entryPgaIds = slateIdToLineups[slateId][entry];
       for (uint8 g = 0; g < entryPgaIds.length; g++) {
-        contest.entryScores[entry] += slateIdToSalaries[slateId][entryPgaIds[g]].points;
+        contest.entryScores[entry] += slateIdToSlateGolfers[slateId][entryPgaIds[g]].points;
       }
       totalPoints += contest.entryScores[entry];
     }
@@ -321,7 +324,7 @@ contract PgaDfs is usingOraclize {
     uint summedSquaredWinningScores = 0;
 
     for (ii = 0; ii < totalEntries; ii++) {
-      entry = contest.entries[ii];
+      entry = contest.slateIdToEntries[slateId][ii];
       if (contest.entryScores[entry] >= averagePointsRoundedDown && contest.entryScores[entry] >= 0) {
         uint squaredScore = uint(contest.entryScores[entry] * contest.entryScores[entry]);
         winningEntries.push(entry);
@@ -357,8 +360,8 @@ contract PgaDfs is usingOraclize {
     require(contest.slateIdToPayoutsSet[slateId]);
     require(contest.live);
 
-    for (uint ii = 0; ii < contest.entries.length; ii++) {
-      address entry = contest.entries[ii];
+    for (uint ii = 0; ii < contest.slateIdToEntries[slateId].length; ii++) {
+      address entry = contest.slateIdToEntries[slateId][ii];
       if (contest.balances[entry] > 0) {
         entry.transfer(contest.balances[entry]);
         contest.balances[msg.sender] = 0;
@@ -469,7 +472,7 @@ contract PgaDfs is usingOraclize {
       return (
           contestId,
           contest.entryFee,
-          contest.entries.length,
+          contest.slateIdToEntries[slateId].length,
           contest.owner
         );
     }
