@@ -320,9 +320,9 @@ contract PgaDfs is usingOraclize {
       address entry = contest.slateIdToEntries[slateId][ii];
       bytes6[8] memory entryPgaIds = slateIdToLineups[slateId][entry].golferIds;
       for (uint8 g = 0; g < entryPgaIds.length; g++) {
-        slateIdToAddressScores[slateId][entry] += slateIdToSlateGolfers[slateId][entryPgaIds[g]].points;
+        contest.slateIdToAddressScores[slateId][entry] += slateIdToSlateGolfers[slateId][entryPgaIds[g]].points;
       }
-      totalPoints += slateIdToAddressScores[slateId][entry];
+      totalPoints += contest.slateIdToAddressScores[slateId][entry];
     }
 
     // of the top half (except any of those that scored < 0),
@@ -334,8 +334,8 @@ contract PgaDfs is usingOraclize {
 
     for (ii = 0; ii < totalEntries; ii++) {
       entry = contest.slateIdToEntries[slateId][ii];
-      if (slateIdToAddressScores[slateId][entry] >= averagePointsRoundedDown && slateIdToAddressScores[slateId][entry] >= 0) {
-        uint squaredScore = uint(slateIdToAddressScores[slateId][entry] * slateIdToAddressScores[slateId][entry]);
+      if (contest.slateIdToAddressScores[slateId][entry] >= averagePointsRoundedDown && contest.slateIdToAddressScores[slateId][entry] >= 0) {
+        uint squaredScore = uint(contest.slateIdToAddressScores[slateId][entry] * contest.slateIdToAddressScores[slateId][entry]);
         winningEntries.push(entry);
         summedSquaredWinningScores += squaredScore;
       }
@@ -346,7 +346,7 @@ contract PgaDfs is usingOraclize {
       entry = winningEntries[ii];
       // TODO: make sure there's no rounding error B.S. going on
       // that makes us massively over or under pay people
-      squaredScore = uint(slateIdToAddressScores[slateId][entry] * slateIdToAddressScores[slateId][entry]);
+      squaredScore = uint(contest.slateIdToAddressScores[slateId][entry] * contest.slateIdToAddressScores[slateId][entry]);
       uint toPayout = (contest.prizePool * squaredScore) / summedSquaredWinningScores;
       contest.balances[entry] += toPayout;
     }
