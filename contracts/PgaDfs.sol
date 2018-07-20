@@ -184,12 +184,12 @@ contract PgaDfs is usingOraclize {
 
     // and salary must be under cap
     var totalSalary = 0;
-    for (uint4 ii = 0; ii < golferCount; ii++) {
-      bytes6 golferId = toBytes6(golferIdsSlice.split(playerDelimiter).toString());
+    for (uint8 ii = 0; ii < golferCount; ii++) {
+      bytes6 golferId = toBytes6(golferIdsSlice.split(delimiter).toString());
       require(!alreadyHasGolfer[golferId]);
       golferIds[ii] = golferId;
       alreadyHasGolfer[golferId] = true;
-      totalSalary += slateIdToSlateGolfers[slateId][golferids[ii]].salary;
+      totalSalary += slateIdToSlateGolfers[slateId][golferId].salary;
     }
     require(totalSalary <= salaryCap);
 
@@ -263,7 +263,7 @@ contract PgaDfs is usingOraclize {
     var playerDelimiter = " ".toSlice();
     var playerSlices = new strings.slice[](compressedSalariesSlice.count(playerDelimiter) + 1);
 
-    for (ii = 0; ii < playerSlices.length; ii++) {
+    for (uint8 ii = 0; ii < playerSlices.length; ii++) {
       playerSlices[ii] = compressedSalariesSlice.split(playerDelimiter);
       bytes6 pgaPlayerId = toBytes6(playerSlices[ii].split(":".toSlice()).toString());
       int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
@@ -306,7 +306,7 @@ contract PgaDfs is usingOraclize {
     require(contest.live);
     require(!contest.slateIdToPayoutsSet[slateId]);
 
-    mapping (address => int10) contestEntryScores;
+    mapping (address => int16) contestEntryScores;
     int32 totalEntries = int32(contest.slateIdToEntries[slateId].length);
     int totalPoints = 0;
 
