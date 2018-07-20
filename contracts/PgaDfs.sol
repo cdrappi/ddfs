@@ -218,7 +218,8 @@ contract PgaDfs is usingOraclize {
 
   function enterContest(bytes32 contestId) public payable {
     // to enter contest, user must have lineup hash on chain
-    require(slateIdToLineups[slateId][msg.sender]);
+    Lineup memory entrantLineup = slateIdToLineups[slateId][msg.sender];
+    require(entrantLineup.golferIdsHash);
     payEntryFeeToContest(contestId, msg.sender, msg.value);
   }
 
@@ -312,7 +313,7 @@ contract PgaDfs is usingOraclize {
 
     // calculate the average score in the contest
     for (uint8 ii = 0; ii < totalEntries; ii++) {
-      address entry = contest.contest.slateIdToEntries[slateId][ii];
+      address entry = contest.slateIdToEntries[slateId][ii];
       bytes6[8] memory entryPgaIds = slateIdToLineups[slateId][entry];
       for (uint8 g = 0; g < entryPgaIds.length; g++) {
         contestEntryScores[entry] += slateIdToSlateGolfers[slateId][entryPgaIds[g]].points;
