@@ -29,11 +29,11 @@
     </div>
     <br>
     <br>
-    <button class="btn btn-primary" :disabled="disableSubmit" @click="performSubmit">Save to blockchain</button>
+    <button class="btn btn-primary" :disabled="disableSubmit" @click="performSubmit">Save lineup hash to blockchain</button>
     <strong v-show="submitting">Submitting...</strong>
     <strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
 
-    <button class="btn btn-secondary" :disabled="disableSubmit" @click="saveToCookie">Save locally</button>
+    <button class="btn btn-secondary" :disabled="disableSubmit" @click="saveToCookie">Save lineup locally</button>
     <strong v-show="submitting">Saving ...</strong>
     <strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
 
