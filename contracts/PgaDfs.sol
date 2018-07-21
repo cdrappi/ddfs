@@ -280,7 +280,7 @@ contract PgaDfs is usingOraclize {
     var playerSlices = new strings.slice[](compressedSalariesSlice.count(playerDelimiter) + 1);
 
     for (uint8 ii = 0; ii < playerSlices.length; ii++) {
-      playerSlices[ii] = compressedSalariesSlice.split(playerDelimiter);
+      /* playerSlices[ii] = compressedSalariesSlice.split(playerDelimiter);
       bytes6 pgaPlayerId = toBytes6(playerSlices[ii].split(":".toSlice()).toString());
       int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
 
@@ -289,6 +289,8 @@ contract PgaDfs is usingOraclize {
           salary : salary,
           points : 0
         });
+    } */
+      bytes6 pgaPlayerId = toBytes6("10101");
     }
   }
 

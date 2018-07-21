@@ -218,7 +218,10 @@
                         },
                         (err, txHash) => {
                             if (err) {
-                                console.error('error calling revealLineupOnChain: ', err)
+                                console.error(
+                                  'error calling revealLineupOnChain: ', err,
+                                  '\ntxHash: ', txHash
+                                )
                                 this.errorSubmit = true
                             }
                             else {
