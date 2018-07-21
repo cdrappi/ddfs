@@ -167,6 +167,15 @@ contract PgaDfs is usingOraclize {
     theLineup.submittedHash = true;
   }
 
+  // returns: Lineup.golferIdsHash
+  function getLineupHash(address entrantAddress) public view {
+    return slateIdToLineups[slateId][entrantAddress].golferIdsHash;
+  }
+
+  function getSlateId() public view returns (bytes12) {
+    return slateId;
+  }
+
   // lineups must:
   // have 8 or less players
   // total salary must be <= salary cap
