@@ -280,17 +280,15 @@ contract PgaDfs is usingOraclize {
     var playerSlices = new strings.slice[](compressedSalariesSlice.count(playerDelimiter) + 1);
 
     for (uint8 ii = 0; ii < playerSlices.length; ii++) {
-      /* playerSlices[ii] = compressedSalariesSlice.split(playerDelimiter);
+      playerSlices[ii] = compressedSalariesSlice.split(playerDelimiter);
+
       bytes6 pgaPlayerId = toBytes6(playerSlices[ii].split(":".toSlice()).toString());
+
       int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
 
-      slateIdToGolferIds[slateId][ii] = pgaPlayerId;
-      slateIdToSlateGolfers[slateId][pgaPlayerId] = SlateGolfer({
-          salary : salary,
-          points : 0
-        });
-    } */
-      bytes6 pgaPlayerId = toBytes6("10101");
+      slateIdToGolferIds[slateId].push(pgaPlayerId);
+      SlateGolfer storage slateGolfer = slateIdToSlateGolfers[slateId][pgaPlayerId];
+      slateGolfer.salary = salary;
     }
   }
 
