@@ -84,13 +84,13 @@ contract PgaDfs is usingOraclize {
     extraEther = msg.value;
 
     // OAR for ethereum-bridge
-    OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
+    /* OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475); */
     // TODO: tinker with this gas value
-    oraclize_setCustomGasPrice(1000000000 wei);
+    /* oraclize_setCustomGasPrice(1000000000 wei); */
 
     // execute a dummy transcaction to make fee estimation
     // work by burning the free transaction
-    oraclize_query("URL", "json(http://api.fixer.io/latest?symbols=USD,GBP).rates.GBP");
+    /* oraclize_query("URL", "json(http://api.fixer.io/latest?symbols=USD,GBP).rates.GBP"); */
   }
 
 
