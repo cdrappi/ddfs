@@ -271,6 +271,7 @@ contract PgaDfs is usingOraclize {
 
 
   function setSalaries(string compressedSalaries) public {
+    // TODO: make internal / only contractAdmin
 
     slateIdToCompleteScoring[slateId] = false;
 
@@ -292,6 +293,7 @@ contract PgaDfs is usingOraclize {
   }
 
   function setScores(string compressedScores) public {
+    // TODO: make internal / only contractAdmin
     // TODO: really make sure this works
     // TODO: difference between var and normal types?
     require(!slateIdToCompleteScoring[slateId]);

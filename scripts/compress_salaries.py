@@ -12,7 +12,7 @@ compressed_salaries_list = []
 records = df[df_columns].to_dict(orient='records')
 for row in records:
     compressed_salaries_list.append(
-        f'{row["pga_id"]}:{row["thursday_tee_timestamp"]}:{row["eth_salary"]}'
+        f'{row["pga_id"]}:{row["eth_salary"]}'
     )
 
 compressed_salaries = ' '.join(compressed_salaries_list)

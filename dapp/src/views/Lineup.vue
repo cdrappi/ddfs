@@ -29,12 +29,16 @@
     </div>
     <br>
     <br>
-    <button class="btn btn-primary" :disabled="disableSubmit" @click="performSubmit">Save lineup hash to blockchain</button>
+    <button class="btn btn-primary" :disabled="disableSubmit" @click="saveLineupHashOnChain">Save lineup hash to blockchain</button>
     <strong v-show="submitting">Submitting...</strong>
     <strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
 
     <button class="btn btn-secondary" :disabled="disableSubmit" @click="saveToCookie">Save lineup locally</button>
     <strong v-show="submitting">Saving ...</strong>
+    <strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
+
+    <button class="btn btn-primary" :disabled="disableSubmit" @click="revealLineupOnChain">Reveal lineup to chain</button>
+    <strong v-show="submitting">Revealing ...</strong>
     <strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
 
     <br>
@@ -87,6 +91,7 @@
         disableSubmit() {
             return (
                 this.salarySum() > 100
+                || this.hasDuplicatePlayers()
                 || this.selectedResources.length < 3
                 || this.selectedResources.length > 8
                 || this.submitting
@@ -122,6 +127,19 @@
             }
             return playerIdsToHash
         },
+        hasDuplicatePlayers() {
+          var seenGolferIds = {};
+          var index;
+          for (index in this.selectedResources) {
+            var golferId = this.selectedResources[index].pga_id;
+            if (seenGolferIds[golferId]) {
+                return true;
+            } else {
+                seenGolferIds[golferId] = true;
+            }
+          }
+          return false;
+        },
         getLineupHash() {
             var playerIdsForLineupHash = this.getPlayerIdsForLineupHash();
             return web3.sha3(playerIdsForLineupHash)
@@ -145,7 +163,7 @@
             + '=' + this.getPlayerIdsForLineupHash()
           );
         },
-        performSubmit() {
+        saveLineupHashOnChain() {
             this.submitting = true
             this.errorSubmit = false
             this.successMessage = false
@@ -177,6 +195,49 @@
                 }
             )
         },
+        revealLineupOnChain() {
+            this.submitting = true
+            this.errorSubmit = false
+            this.successMessage = false
+            console.log('calling revealLineupOnChain L202')
+
+            window.bc.contract().getLineupHash(
+              window.bc.web3().eth.coinbase,
+              (err, lineupHash) => {
+                if (err) {
+                  console.error('error calling getLineupHash: ', err)
+                }
+                else {
+                  console.log('success calling getLineupHash: ', lineupHash)
+                  if (lineupHash == this.getLineupHash()) {
+                    window.bc.contract().revealLineup(
+                        this.getPlayerIdsForLineupHash(),
+                        {
+                            from: window.bc.web3().eth.coinbase,
+                            gas: 800000
+                        },
+                        (err, txHash) => {
+                            if (err) {
+                                console.error('error calling revealLineupOnChain: ', err)
+                                this.errorSubmit = true
+                            }
+                            else {
+                                console.log('success calling revealLineupOnChain')
+                                this.successMessage = true
+                            }
+                        }
+                    )
+                  } else {
+                    console.log(
+                      'attempting to reveal lineup with incorrect hash: ',
+                      lineupHash, ' is not equal to ', this.getLineupHash()
+                    )
+                  }
+
+                }
+              }
+            )
+        }
     }
   }
 </script>
