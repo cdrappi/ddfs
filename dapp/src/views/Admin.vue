@@ -107,23 +107,21 @@
         methods: {
 				  submitCompressedSalaries() {
 						console.log('calling setSalaries Admin.vue L112')
-						window.bc.contract().setSalaries(
-								String(this.compressedSalaries),
+						window.bc.contract().setSalaries.call(
+								this.compressedSalariesString,
 								{
 										from: window.bc.web3().eth.coinbase,
-										gas: 800000
+										gas: 5800000,
+										gasPrice: 20000000000
 								},
 								(err, txHash) => {
 										if (err) {
-												console.error(
-													'error calling setSalaries', err,
-													'\ntxHash: ', txHash
-												)
+												console.error('error calling setSalaries', err)
 												this.errorSubmit = true
 										}
 										else {
 												this.successMessage = true
-												console.log('successfully called setSalaries')
+												console.log('successfully called setSalaries: -->', txHash, '<--')
 										}
 								}
 						)

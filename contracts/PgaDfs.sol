@@ -29,7 +29,7 @@ contract PgaDfs is usingOraclize {
     bytes32 golferIdsHash;
     // MAX of 8 pga tour ids...
     // you can play less than 8 guys if you want!
-    // e.g. ["21059", "94320", "85933"]
+    // e.g. [web3.fromAscii("21059"), web3.fromAscii("94320"), web3.fromAscii("85933")]
     bytes32[8] golferIds;
   }
 
@@ -176,11 +176,16 @@ contract PgaDfs is usingOraclize {
     return slateId;
   }
 
+  function getSalary(string pgaId) public view returns (int8) {
+    bytes32 pgaIdBytes32 = toBytes32(pgaId);
+    return slateIdToSlateGolfers[slateId][pgaIdBytes32].salary;
+  }
+
   // lineups must:
   // have 8 or less players
   // total salary must be <= salary cap
   // can only play the same guy once
-  function revealLineup(string golferIdsColonDelimited) public returns (bytes32) {
+  function revealLineup(string golferIdsColonDelimited) public returns (int16) {
     require(slateIdToLineups[slateId][msg.sender].golferIdsHash == keccak256(golferIdsColonDelimited));
 
     var golferIds = new bytes32[](8);
@@ -194,36 +199,28 @@ contract PgaDfs is usingOraclize {
 
     // and salary must be under cap
     int16 totalSalary = 0;
-    bytes32 emptyStringKeccak = keccak256("0x000000000000");
+    // bytes32 emptyStringAsBytes32 = toBytes32("");
 
     for (uint8 ii = 0; ii < golferCount; ii++) {
-      var golferId = golferIdsSlice.split(delimiter).toString();
-      return toBytes32(golferId);
-      /* bytes32 golferId = toBytes32(golferIdsSlice.split(delimiter).toString());
-      return golferId; */
-/*
+      // string  --> left padded bytes32
+      // "29725" --> "0x3239373235000000000000000000000000000000000000000000000000000000"
+      // replicate this with web3.fromAscii('29725')
+      bytes32 golferId = toBytes32(golferIdsSlice.split(delimiter).toString());
+
       for (uint8 jj = 0; jj < ii; jj++) {
-        // ENFORCING UNIQUENESS: try to find a better way!
-        // if the golfer is not the empty string
-        if (keccak256(golferId) != emptyStringKeccak) {
-          // then make sure it doesnt have the same keccak as any other
-          // golfer in the lineup
-          if (keccak256(golferId) == keccak256(golferIds[jj])) {
-            return (golferId, golferIds[jj], ii, jj);
-          }
-        }
+        require(golferId != golferIds[jj]);
       }
       golferIds[ii] = golferId;
-      totalSalary += slateIdToSlateGolfers[slateId][golferId].salary; */
+      totalSalary += slateIdToSlateGolfers[slateId][golferId].salary;
     }
-
-    return toBytes32("10101");
 
     require(totalSalary <= salaryCap);
 
     for (ii = 0; ii < golferIds.length; ii++) {
       slateIdToLineups[slateId][msg.sender].golferIds[ii] = golferIds[ii];
     }
+
+    return totalSalary;
   }
 
   function calculateRake(uint eth) public view returns (uint) {
@@ -271,11 +268,10 @@ contract PgaDfs is usingOraclize {
       // otherwise they can withdraw
       activeContest.balances[msgSender] += ethEntered - activeContest.entryFee - rakeToCollect;
     }
-
   }
 
   // convert a string to bytes32 type using assembly
-  function stringToBytes32(string memory source) returns (bytes32 result) {
+  function toBytes32(string memory source) returns (bytes32 result) {
     bytes memory tempEmptyStringTest = bytes(source);
     if (tempEmptyStringTest.length == 0) {
         return 0x0;
@@ -287,21 +283,24 @@ contract PgaDfs is usingOraclize {
 }
 
 
-  function setSalaries(string compressedSalaries) public {
+  function setSalaries(string compressedSalaries) public returns (string) {
     // TODO: make internal / only contractAdmin
-
     slateIdToCompleteScoring[slateId] = false;
 
     var compressedSalariesSlice = compressedSalaries.toSlice();
     var playerDelimiter = " ".toSlice();
+    var salaryDelimiter = ";".toSlice();
     var playerSlices = new strings.slice[](compressedSalariesSlice.count(playerDelimiter) + 1);
 
     for (uint8 ii = 0; ii < playerSlices.length; ii++) {
       playerSlices[ii] = compressedSalariesSlice.split(playerDelimiter);
 
-      bytes32 pgaPlayerId = toBytes32(playerSlices[ii].split(":".toSlice()).toString());
+      return playerSlices[ii].toString();
 
-      int8 salary = int8(parseInt(playerSlices[ii].split("-".toSlice()).toString()));
+      bytes32 pgaPlayerId = toBytes32(playerSlices[ii].split(salaryDelimiter).toString());
+
+      int8 salary = int8(parseInt(playerSlices[ii].split(salaryDelimiter).toString()));
+      require(salary > 0);
 
       slateIdToGolferIds[slateId].push(pgaPlayerId);
       SlateGolfer storage slateGolfer = slateIdToSlateGolfers[slateId][pgaPlayerId];
