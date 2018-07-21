@@ -210,22 +210,19 @@
                 else {
                   console.log('success calling getLineupHash: ', lineupHash)
                   if (lineupHash == this.getLineupHash()) {
-                    window.bc.contract().revealLineup(
+                    window.bc.contract().revealLineup.call(
                         this.getPlayerIdsForLineupHash(),
                         {
                             from: window.bc.web3().eth.coinbase,
                             gas: 800000
                         },
-                        (err, txHash) => {
+                        (err, res) => {
                             if (err) {
-                                console.error(
-                                  'error calling revealLineupOnChain: ', err,
-                                  '\ntxHash: ', txHash
-                                )
+                                console.error('error calling revealLineupOnChain: ', err)
                                 this.errorSubmit = true
                             }
                             else {
-                                console.log('success calling revealLineupOnChain')
+                                console.log('success calling revealLineupOnChain: ', res)
                                 this.successMessage = true
                             }
                         }
