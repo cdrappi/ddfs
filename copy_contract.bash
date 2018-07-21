@@ -1,0 +1,1 @@
+cp build/contracts/PgaDfs.json dapp/src/assets/PgaDfsContract.json
