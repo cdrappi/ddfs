@@ -168,7 +168,7 @@ contract PgaDfs is usingOraclize {
   }
 
   // returns: Lineup.golferIdsHash
-  function getLineupHash(address entrantAddress) public view {
+  function getLineupHash(address entrantAddress) public view returns (bytes32) {
     return slateIdToLineups[slateId][entrantAddress].golferIdsHash;
   }
 
