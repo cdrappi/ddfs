@@ -11,3 +11,11 @@ views:
 - Lobby view (join contests w/ lineup hash)
 - Sweat view (DK's currently winning page, linking to contests)
 - Contest view (sweat view over single contest)
+
+
+bytes32 slateId
+mapping slateId => salaries
+
+submitLineupHash(slateId, address, hash)
+revealLineup(slateId, address, lineup)
+mapping slateId => (mapping address => lineup)
