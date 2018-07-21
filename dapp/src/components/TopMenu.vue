@@ -13,6 +13,10 @@
                 <a><strong>Lineup</strong></a>
             </router-link>
 
+            <router-link tag="li" class="nav-link" to="/admin" exact>
+                <a><strong>Admin</strong></a>
+            </router-link>
+
             <li class="nav-link"></li>
             <li class="nav-link">
                 <strong :class="connectedClass">
@@ -94,7 +98,7 @@
         created() {
             // when the event userregistered is fired (from the view Register.vue)
             // it runs the function checkUntilUserIsRegistered
-            Event.$on('userregistered', this.checkUntilUserIsRegistered);
+            // Event.$on('userregistered', this.checkUntilUserIsRegistered);
             this.checkUserIsRegistered()
         }
     }

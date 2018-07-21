@@ -1,32 +1,28 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Lobby from '@/views/Lobby'
-import Lineup3 from '@/views/Lineup3'
+import Lineup from '@/views/Lineup'
+import Admin from '@/views/Admin'
 
 Vue.use(Router)
 
 export default new Router({
     routes: [
-        // {
-        //     path: '/',
-        //     name: 'Lobby',
-        //     component: Lobby
-        // },
         {
             path: '/lobby',
             name: 'Lobby',
             component: Lobby
         },
         {
-          path: '/lineup3',
-          name: 'Lineup3',
-          component: Lineup3
+          path: '/lineup',
+          name: 'Lineup',
+          component: Lineup
         },
-        // {
-        //   path: '/sweat',
-        //   name: 'Sweat',
-        //   component: Sweat,
-        // }
+        {
+          path: '/admin',
+          name: 'Admin',
+          component: Admin,
+        }
     ],
     linkActiveClass: 'active'
 })
