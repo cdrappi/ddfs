@@ -283,29 +283,27 @@ contract PgaDfs is usingOraclize {
 }
 
 
-  function setSalaries(string compressedSalaries) public returns (string) {
-    // TODO: make internal / only contractAdmin
-    slateIdToCompleteScoring[slateId] = false;
+  function setSalaries(string compressedSalaries) public {
+      require(msg.sender == contractAdmin);
+      // TODO: make internal / only contractAdmin
+      slateIdToCompleteScoring[slateId] = false;
 
-    var compressedSalariesSlice = compressedSalaries.toSlice();
-    var playerDelimiter = " ".toSlice();
-    var salaryDelimiter = ";".toSlice();
-    var playerSlices = new strings.slice[](compressedSalariesSlice.count(playerDelimiter) + 1);
+      var compressedSalariesSlice = compressedSalaries.toSlice();
+      var playerDelimiter = " ".toSlice();
+      var salaryDelimiter = ":".toSlice();
+      uint playerCount = compressedSalariesSlice.count(playerDelimiter) + 1;
 
-    for (uint8 ii = 0; ii < playerSlices.length; ii++) {
-      playerSlices[ii] = compressedSalariesSlice.split(playerDelimiter);
+      for (uint8 ii = 0; ii < playerCount; ii++) {
+          var playerColonSalary = compressedSalariesSlice.split(playerDelimiter);
 
-      return playerSlices[ii].toString();
+          bytes32 pgaPlayerId = toBytes32(playerColonSalary.split(salaryDelimiter).toString());
 
-      bytes32 pgaPlayerId = toBytes32(playerSlices[ii].split(salaryDelimiter).toString());
+          int8 salary = int8(parseInt(playerColonSalary.toString()));
 
-      int8 salary = int8(parseInt(playerSlices[ii].split(salaryDelimiter).toString()));
-      require(salary > 0);
-
-      slateIdToGolferIds[slateId].push(pgaPlayerId);
-      SlateGolfer storage slateGolfer = slateIdToSlateGolfers[slateId][pgaPlayerId];
-      slateGolfer.salary = salary;
-    }
+          slateIdToGolferIds[slateId].push(pgaPlayerId);
+          SlateGolfer storage slateGolfer = slateIdToSlateGolfers[slateId][pgaPlayerId];
+          slateGolfer.salary = salary;
+      }
   }
 
   function setScores(string compressedScores) public {
