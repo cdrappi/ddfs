@@ -2,7 +2,7 @@ import requests
 import pandas
 import getpass
 
-pga_tournament_id = '490'
+pga_tournament_id = '100'
 year = '2018'
 
 url = f'https://statdata.pgatour.com/r/{pga_tournament_id}/{year}/leaderboard-v2mini.json'
