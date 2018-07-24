@@ -11,7 +11,7 @@ df = pandas.read_csv(
 )
 df_columns = ['name','pga_id','thursday_tee_timestamp','eth_salary']
 
-df.head(5)
+# print(json.dumps(df[['pga_id', 'name', 'eth_salary']].to_dict(orient='records'), indent=4))
 
 compressed_salaries_list = []
 records = df[df_columns].to_dict(orient='records')
