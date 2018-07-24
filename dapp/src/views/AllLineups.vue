@@ -12,10 +12,10 @@
         <table class="table table-striped" v-show="!isLoading">
             <thead class="thead-dark">
                 <tr>
-                    <th style="width:15%">Address</th>
-                    <th style="width:25%">Lineup Hash</th>
+                    <th style="width:20%">Address</th>
+                    <th style="width:30%">Lineup Hash</th>
                     <th style="width:10%">Player Count</th>
-                    <th style="width:50%">Players</th>
+                    <th style="width:40%">Players</th>
                 </tr>
             </thead>
             <tbody>
