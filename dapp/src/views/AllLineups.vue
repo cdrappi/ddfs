@@ -12,20 +12,21 @@
         <table class="table table-striped" v-show="!isLoading">
             <thead class="thead-dark">
                 <tr>
-                    <th style="width:20%">Address</th>
-                    <th style="width:30%">Lineup Hash</th>
-                    <th style="width:10%">Player Count</th>
-                    <th style="width:40%">Players</th>
+                    <th style="width:16%">Address</th>
+                    <th style="width:22%">Hash</th>
+                    <th style="width:47%">Lineup</th>
+					<th style="width:13%">Salary</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="lineup in allLineups">
                     <td>{{ lineup["address"] }}</td>
                     <td>{{ lineup["hash"] }}</td>
-                    <td>{{ lineup["players"].length }}</td>
-                    <td>
-                        <pre>{{ joinPlayers(lineup["players"]) }}</pre>
-                    </td>
+					<td>
+						<pre>{{ joinPlayers(lineup["players"]) }}</pre>
+					</td>
+					<td>{{ sumSalary(lineup["players"]) }}</td>
+
                 </tr>
             </tbody>
         </table>
@@ -73,6 +74,14 @@
                 }
                 return golferIdToGolfer;
             },
+			sumSalary(golfers) {
+				var totalSalary = 0;
+				var index;
+				for (index in golfers) {
+					totalSalary += golfers[index].eth_salary;
+				}
+				return totalSalary;
+			},
             formatPlayers(pgaIdsBytes32_) {
                 var pgaIdsBytes32 = this.dropBlanks(pgaIdsBytes32_);
                 var lineup = [];
