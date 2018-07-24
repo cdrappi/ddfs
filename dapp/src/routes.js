@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import RevealedLineups from '@/views/RevealedLineups'
+import AllLineups from '@/views/AllLineups'
 import Lineup from '@/views/Lineup'
 import Lobby from '@/views/Lobby'
 import Admin from '@/views/Admin'
@@ -10,9 +10,9 @@ Vue.use(Router)
 export default new Router({
     routes: [
         {
-            path: '/revealed',
-            name: 'RevealedLineups',
-            component: RevealedLineups
+            path: '/lineups',
+            name: 'AllLineups',
+            component: AllLineups
         },
         {
             path: '/lobby',
