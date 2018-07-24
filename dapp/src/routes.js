@@ -1,13 +1,19 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Lobby from '@/views/Lobby'
+import RevealedLineups from '@/views/RevealedLineups'
 import Lineup from '@/views/Lineup'
+import Lobby from '@/views/Lobby'
 import Admin from '@/views/Admin'
 
 Vue.use(Router)
 
 export default new Router({
     routes: [
+        {
+            path: '/revealed',
+            name: 'RevealedLineups',
+            component: RevealedLineups
+        },
         {
             path: '/lobby',
             name: 'Lobby',

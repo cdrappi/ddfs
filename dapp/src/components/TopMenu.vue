@@ -13,6 +13,10 @@
                 <a><strong>Lineup</strong></a>
             </router-link>
 
+            <router-link tag="li" class="nav-link" to="/revealed" exact>
+                <a><strong>Revealed Lineups</strong></a>
+            </router-link>
+
             <router-link tag="li" class="nav-link" to="/admin" exact>
                 <a><strong>Admin</strong></a>
             </router-link>

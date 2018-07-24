@@ -142,6 +142,7 @@ contract PgaDfs is usingOraclize {
   mapping (bytes12 => bytes32[]) slateIdToGolferIds;
   // slate id ==> pga tour id ==> golfer data (salary, scores, etc.)
   mapping (bytes12 => mapping(bytes32 => SlateGolfer)) slateIdToSlateGolfers;
+  mapping (bytes12 => address[]) slateIdToEnteredAddresses;
   mapping (bytes12 => mapping (address => Lineup)) slateIdToLineups;
 
   // contest data
@@ -163,6 +164,10 @@ contract PgaDfs is usingOraclize {
     // can't change lineup hash after lock
     require(block.timestamp <= slateIdToLockTimestamp[slateId]);
     Lineup storage theLineup = slateIdToLineups[slateId][msg.sender];
+    if (!theLineup.submittedHash) {
+        // don't push duped addresses if they already have a lineup
+        slateIdToEnteredAddresses[slateId].push(msg.sender);
+    }
     theLineup.golferIdsHash = lineupHash;
     theLineup.submittedHash = true;
   }
@@ -170,6 +175,15 @@ contract PgaDfs is usingOraclize {
   // returns: Lineup.golferIdsHash
   function getLineupHash(address entrantAddress) public view returns (bytes32) {
     return slateIdToLineups[slateId][entrantAddress].golferIdsHash;
+  }
+
+  function getEnteredAddressesForCurrentSlate() public view returns (address[]) {
+      return slateIdToEnteredAddresses[slateId];
+  }
+
+  function getCurrentSlateLineupForAddress(address address_) public view returns (bytes32, bytes32[8]) {
+      Lineup memory theLineup = slateIdToLineups[slateId][address_];
+      return (theLineup.golferIdsHash, theLineup.golferIds);
   }
 
   function getSlateId() public view returns (bytes12) {
@@ -185,7 +199,7 @@ contract PgaDfs is usingOraclize {
   // have 8 or less players
   // total salary must be <= salary cap
   // can only play the same guy once
-  function revealLineup(string golferIdsColonDelimited) public returns (int16) {
+  function revealLineup(string golferIdsColonDelimited) public {
     require(slateIdToLineups[slateId][msg.sender].golferIdsHash == keccak256(golferIdsColonDelimited));
 
     var golferIds = new bytes32[](8);
@@ -199,7 +213,6 @@ contract PgaDfs is usingOraclize {
 
     // and salary must be under cap
     int16 totalSalary = 0;
-    // bytes32 emptyStringAsBytes32 = toBytes32("");
 
     for (uint8 ii = 0; ii < golferCount; ii++) {
       // string  --> left padded bytes32
@@ -219,8 +232,6 @@ contract PgaDfs is usingOraclize {
     for (ii = 0; ii < golferIds.length; ii++) {
       slateIdToLineups[slateId][msg.sender].golferIds[ii] = golferIds[ii];
     }
-
-    return totalSalary;
   }
 
   function calculateRake(uint eth) public view returns (uint) {
