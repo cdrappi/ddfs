@@ -107,7 +107,7 @@
         methods: {
 				  submitCompressedSalaries() {
 						console.log('calling setSalaries Admin.vue L112')
-						window.bc.contract().setSalaries.call(
+						window.bc.contract().setSalaries(
 								this.compressedSalariesString,
 								{
 										from: window.bc.web3().eth.coinbase,

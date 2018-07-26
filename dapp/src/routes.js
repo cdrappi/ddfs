@@ -1,13 +1,19 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Lobby from '@/views/Lobby'
+import AllLineups from '@/views/AllLineups'
 import Lineup from '@/views/Lineup'
+import Lobby from '@/views/Lobby'
 import Admin from '@/views/Admin'
 
 Vue.use(Router)
 
 export default new Router({
     routes: [
+        {
+            path: '/lineups',
+            name: 'AllLineups',
+            component: AllLineups
+        },
         {
             path: '/lobby',
             name: 'Lobby',

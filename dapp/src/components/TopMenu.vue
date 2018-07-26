@@ -10,7 +10,11 @@
             </router-link>
 
             <router-link tag="li" class="nav-link" to="/lineup" exact>
-                <a><strong>Lineup</strong></a>
+                <a><strong>Your Lineup</strong></a>
+            </router-link>
+
+            <router-link tag="li" class="nav-link" to="/lineups" exact>
+                <a><strong>All Lineups</strong></a>
             </router-link>
 
             <router-link tag="li" class="nav-link" to="/admin" exact>

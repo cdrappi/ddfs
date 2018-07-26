@@ -227,9 +227,8 @@
                 else {
                   console.log('success calling getLineupHash: ', lineupHash)
                   if (lineupHash == this.getLineupHash()) {
-                    window.bc.contract().getSalary.call(
-                        "29725",
-                        // this.getPlayerIdsForLineupHash(),
+                    window.bc.contract().revealLineup(
+                        this.getPlayerIdsForLineupHash(),
                         {
                             from: window.bc.web3().eth.coinbase,
                             gas: 800000
