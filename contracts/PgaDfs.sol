@@ -199,14 +199,13 @@ contract PgaDfs is usingOraclize {
   // have 8 or less players
   // total salary must be <= salary cap
   // can only play the same guy once
-<<<<<<< HEAD
   function revealLineup(string golferIdsColonDelimited, string revealKey) public returns (int16) {
-    string preHash = golferIdsColonDelimited.toSlice().concat(revealKey.toSlice())
+    string preHash = (
+        golferIdsColonDelimited.toSlice()
+        .concat('|'.toSlice())
+        .concat(revealKey.toSlice())
+    )
     require(slateIdToLineups[slateId][msg.sender].golferIdsHash == keccak256(preHash));
-=======
-  function revealLineup(string golferIdsColonDelimited) public {
-    require(slateIdToLineups[slateId][msg.sender].golferIdsHash == keccak256(golferIdsColonDelimited));
->>>>>>> fdb51a57ce45b814e6e16b424bc254c081147aba
 
     var golferIds = new bytes32[](8);
 
