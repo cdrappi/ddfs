@@ -5,7 +5,7 @@ function getPgaCookieName(address) {
 function getCookie(name) {
     var value = "; " + document.cookie;
     var parts = value.split("; " + name + "=");
-    if (parts.length == 2) {
+    if (parts && parts.length == 2) {
         return parts.pop().split(";").shift();
     }
     return '';
@@ -18,6 +18,10 @@ function getPgaIdsFromCookie(address) {
     } else {
         return []
     }
+}
+
+function getRevealKeyFromCookie(address) {
+    return getCookie(getPgaCookieName(address)+'key');
 }
 
 function getSelectedGolfersFromCookie(address) {

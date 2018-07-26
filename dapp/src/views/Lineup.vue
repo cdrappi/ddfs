@@ -25,22 +25,32 @@
 
     <br>
     <div>
-      {{ this.getPlayerIdsForLineupHash() }} ==> {{ this.getLineupHash() }}
+      keccak256("{{this.getPlayerIdsForLineupHash()}}{{this.revealKey}}") ==> {{ this.getLineupHash() }}
     </div>
+    <br>
+    <br>
+    <div class="form-group">
+        <label for="description">Scores URL</label>
+        <input class="form-control" placeholder="change reveal key" type="text" v-model="revealKey">
+    </div>
+    <button class="btn btn-primary" @click="saveRevealKeyToCookie">Save reveal key to browser</button>
+    <strong v-show="submitting">Saving ...</strong>
+    <strong v-show="errorSubmit" class="text-danger">Failed to save reveal key!</strong>
     <br>
     <br>
     <button class="btn btn-primary" :disabled="disableSubmit" @click="saveLineupHashOnChain">Save lineup hash to blockchain</button>
     <strong v-show="submitting">Submitting...</strong>
     <strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
-
+    <br>
+    <br>
     <button class="btn btn-secondary" :disabled="disableSubmit" @click="saveToCookie">Save lineup locally</button>
     <strong v-show="submitting">Saving ...</strong>
     <strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
-
+    <br>
+    <br>
     <button class="btn btn-primary" :disabled="disableSubmit" @click="revealLineupOnChain">Reveal lineup to chain</button>
     <strong v-show="submitting">Revealing ...</strong>
     <strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
-
     <br>
     <br>
     <br>
@@ -64,7 +74,7 @@
 <script>
   import Multiselect from 'vue-multiselect'
   import mixin from '../libs/mixinViews'
-  import {getGolfers, getSelectedGolfersFromCookie, getPgaCookieName} from '../libs/getGolfers'
+  import {getGolfers, getSelectedGolfersFromCookie, getPgaCookieName, getRevealKeyFromCookie} from '../libs/getGolfers'
   import Web3 from 'web3';
   var web3 = new Web3();
   export default {
@@ -80,6 +90,7 @@
           submitting: false,
           errorSubmit: false,
           successMessage: false,
+          revealKey: ''//getRevealKeyFromCookie(window.bc.web3().eth.coinbase)
       }
     },
     computed: {
@@ -142,7 +153,7 @@
         },
         getLineupHash() {
             var playerIdsForLineupHash = this.getPlayerIdsForLineupHash();
-            return web3.sha3(playerIdsForLineupHash)
+            return web3.sha3(playerIdsForLineupHash + this.revealKey)
         },
         removeDependency(index) {
             this.selectedResources.splice(index, 1)
@@ -161,6 +172,12 @@
           document.cookie = (
             getPgaCookieName(window.bc.web3().eth.coinbase)
             + '=' + this.getPlayerIdsForLineupHash()
+          );
+        },
+        saveRevealKeyToCookie() {
+          document.cookie = (
+            getPgaCookieName(window.bc.web3().eth.coinbase)
+            + 'key=' + this.revealKey
           );
         },
         saveLineupHashOnChain() {
