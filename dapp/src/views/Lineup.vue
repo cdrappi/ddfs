@@ -90,7 +90,7 @@
           submitting: false,
           errorSubmit: false,
           successMessage: false,
-          revealKey: ''//getRevealKeyFromCookie(window.bc.web3().eth.coinbase)
+          revealKey: getRevealKeyFromCookie(window.bc.web3().eth.coinbase)
       }
     },
     computed: {

@@ -919,4 +919,4 @@ function getGolfers() {
   ]
 }
 
-export {getGolfers, getSelectedGolfersFromCookie, getPgaCookieName};
+export {getGolfers, getSelectedGolfersFromCookie, getPgaCookieName, getRevealKeyFromCookie};
