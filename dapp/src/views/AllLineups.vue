@@ -80,7 +80,12 @@
 				for (index in golfers) {
 					totalSalary += golfers[index].eth_salary;
 				}
-				return totalSalary;
+				if (totalSalary) {
+					return totalSalary;
+				}
+				else {
+					return ""
+				}
 			},
             formatPlayers(pgaIdsBytes32_) {
                 var pgaIdsBytes32 = this.dropBlanks(pgaIdsBytes32_);
@@ -105,7 +110,12 @@
 					var player = playersArray[index];
 					pgaNameIds.push(player["name"] + ' (' + player["pga_id"] + ')')
 				}
-				return pgaNameIds.join("\n")
+				if (pgaNameIds.length) {
+					return pgaNameIds.join("\n");
+				}
+				else {
+					return "not yet revealed";
+				}
 			},
             getAllLineupsList() {
                 if (this.blockchainIsConnected()) {
