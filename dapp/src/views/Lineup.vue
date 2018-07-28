@@ -25,7 +25,7 @@
 
     <br>
     <div>
-      keccak256("{{this.getPlayerIdsForLineupHash()}}{{this.revealKey}}") ==> {{ this.getLineupHash() }}
+      keccak256("{{this.getPlayerIdsForLineupHash()}}|{{this.revealKey}}") ==> {{ this.getLineupHash() }}
     </div>
     <br>
     <br>
@@ -153,7 +153,7 @@
         },
         getLineupHash() {
             var playerIdsForLineupHash = this.getPlayerIdsForLineupHash();
-            return web3.sha3(playerIdsForLineupHash + this.revealKey)
+            return web3.sha3(playerIdsForLineupHash + "|" + this.revealKey)
         },
         removeDependency(index) {
             this.selectedResources.splice(index, 1)
@@ -229,6 +229,7 @@
                   if (lineupHash == this.getLineupHash()) {
                     window.bc.contract().revealLineup(
                         this.getPlayerIdsForLineupHash(),
+                        this.revealKey,
                         {
                             from: window.bc.web3().eth.coinbase,
                             gas: 800000

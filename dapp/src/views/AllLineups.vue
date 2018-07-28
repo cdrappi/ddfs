@@ -70,7 +70,7 @@
                 var index;
                 for (index in golfers) {
                     var golfer = golfers[index];
-                    golferIdToGolfer[golfer.pga_id] = golfer;
+                    golferIdToGolfer[parseInt(golfer.pga_id)] = golfer;
                 }
                 return golferIdToGolfer;
             },
@@ -87,12 +87,13 @@
                 var lineup = [];
                 var index;
                 for (index in pgaIdsBytes32) {
-                    var pgaIdInt = parseInt(window.bc.web3inst.toAscii(pgaIdsBytes32[index]));
+					var pgaIdString = window.bc.web3inst.toAscii(pgaIdsBytes32[index]);
+					var pgaIdInt = parseInt(pgaIdString);
 					if (pgaIdInt in this.golferIdToGolfer) {
 						lineup.push(this.golferIdToGolfer[pgaIdInt])
 					}
 					else {
-						console.warning('cannot find ' + pgaIdInt + ' in this.golferIdToGolfer');
+						console.warn('cannot find ' + pgaIdInt + ' in this.golferIdToGolfer');
 					}
                 }
 				return lineup;
