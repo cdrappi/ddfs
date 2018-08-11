@@ -70,7 +70,7 @@
                 var index;
                 for (index in golfers) {
                     var golfer = golfers[index];
-                    golferIdToGolfer[golfer.pga_id] = golfer;
+                    golferIdToGolfer[parseInt(golfer.pga_id)] = golfer;
                 }
                 return golferIdToGolfer;
             },
@@ -80,19 +80,25 @@
 				for (index in golfers) {
 					totalSalary += golfers[index].eth_salary;
 				}
-				return totalSalary;
+				if (totalSalary) {
+					return totalSalary;
+				}
+				else {
+					return ""
+				}
 			},
             formatPlayers(pgaIdsBytes32_) {
                 var pgaIdsBytes32 = this.dropBlanks(pgaIdsBytes32_);
                 var lineup = [];
                 var index;
                 for (index in pgaIdsBytes32) {
-                    var pgaIdInt = parseInt(window.bc.web3inst.toAscii(pgaIdsBytes32[index]));
+					var pgaIdString = window.bc.web3inst.toAscii(pgaIdsBytes32[index]);
+					var pgaIdInt = parseInt(pgaIdString);
 					if (pgaIdInt in this.golferIdToGolfer) {
 						lineup.push(this.golferIdToGolfer[pgaIdInt])
 					}
 					else {
-						console.warning('cannot find ' + pgaIdInt + ' in this.golferIdToGolfer');
+						console.warn('cannot find ' + pgaIdInt + ' in this.golferIdToGolfer');
 					}
                 }
 				return lineup;
@@ -104,7 +110,12 @@
 					var player = playersArray[index];
 					pgaNameIds.push(player["name"] + ' (' + player["pga_id"] + ')')
 				}
-				return pgaNameIds.join("\n")
+				if (pgaNameIds.length) {
+					return pgaNameIds.join("\n");
+				}
+				else {
+					return "not yet revealed";
+				}
 			},
             getAllLineupsList() {
                 if (this.blockchainIsConnected()) {
