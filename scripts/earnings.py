@@ -2,7 +2,7 @@ import requests
 import pandas
 import getpass
 
-pga_tournament_id = '100'
+pga_tournament_id = '032'
 year = '2018'
 
 url = f'https://statdata.pgatour.com/r/{pga_tournament_id}/{year}/leaderboard-v2mini.json'
@@ -155,7 +155,9 @@ earnings_df = pandas.DataFrame(
     ]
 )
 
+tournament_name = results['debug']['tournament_in_schedule_file_name']
+
 earnings_df.to_csv(
-    f'/Users/{getpass.getuser()}/Desktop/{year}_seasonal_{pga_tournament_id}.csv',
+    f'/Users/{getpass.getuser()}/Desktop/{year}_seasonal_{pga_tournament_id}_{tournament_name}.csv',
     index=False
 )
