@@ -152,7 +152,6 @@
                             console.log('error calling getEnteredAddressesForCurrentSlate: ', err)
                         }
                         else {
-							console.log(addresses)
                             for (let address of addresses) {
                                 window.bc.contract().getCurrentSlateLineupForAddress.call(
                                     address,
