@@ -125,9 +125,13 @@
                     clearInterval(this.tmoConn)
                     // TODO: get contests in lobby
                     // getting all the users from the blockchain
-                    this.getAllLineups(allLineup => {
+                    this.getAllLineups((address, lineup) => {
                         this.isLoading = false
-                        this.allLineups.push(allLineup)
+                        this.allLineups.push({
+							address: address,
+							hash: lineup[0],
+							players: this.formatPlayers(lineup[1])
+						})
                     })
                 }
             },
@@ -140,26 +144,24 @@
             },
             getAllLineups(callback) {
                 console.log('calling getEnteredAddressesForCurrentSlate allLineups L86')
+
+				// var address;
                 window.bc.contract().getEnteredAddressesForCurrentSlate.call(
                     (err, addresses) => {
                         if (err) {
                             console.log('error calling getEnteredAddressesForCurrentSlate: ', err)
                         }
                         else {
-                            var index;
-                            for (index in addresses) {
+							console.log(addresses)
+                            for (let address of addresses) {
                                 window.bc.contract().getCurrentSlateLineupForAddress.call(
-                                    addresses[index],
+                                    address,
                                     (getLineupError, lineup) => {
                                         if (getLineupError) {
                                             console.log('error calling getCurrentSlateLineupForAddress: ', getLineupError)
                                         }
                                         else {
-                                            callback({
-                                                address: addresses[index],
-                                                hash: lineup[0],
-                                                players: this.formatPlayers(lineup[1])
-                                            })
+                                            callback(address, lineup)
                                         }
                                     }
                                 )
