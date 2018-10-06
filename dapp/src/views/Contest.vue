@@ -115,7 +115,7 @@
             }
         },
         created() {
-            this.contestId = this.$router.params.contestId
+            this.contestId = this.$route.params.contestId
             // it tries to get the user list from the blockchian once
             // the connection is established
             this.tmoConn = setInterval(() => {

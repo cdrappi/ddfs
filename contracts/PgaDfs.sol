@@ -52,7 +52,7 @@ contract PgaDfs is usingOraclize {
     mapping (bytes12 => address[]) slateIdToEntries;
 
     mapping (bytes12 => mapping(address => bool)) slateIdToEntered;
-    mapping (bytes12 => mapping(address => int16)) slateIdToAddressScores;
+    mapping (bytes12 => mapping(address => int32)) slateIdToAddressScores;
 
     // ETH address --> how much they recouped
     // once we confirmed the event ends, then payout!
@@ -527,7 +527,7 @@ contract PgaDfs is usingOraclize {
     return contest.slateIdToEntries[slateId_];
   }
 
-  function getEntryScore(bytes12 slateId_, bytes32 contestId, address entryAddress) public view returns (int8) {
+  function getEntryScore(bytes12 slateId_, bytes32 contestId, address entryAddress) public view returns (int32) {
     Contest storage contest = contests[contestId];
     return contest.slateIdToAddressScores[slateId_][entryAddress];
   }
