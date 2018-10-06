@@ -81,7 +81,7 @@
                     'entryFeeEth': contest[1] / 1e18,
                     'entries': Number(contest[2]),
                     'owner': contest[3],
-                    'prize_pool': contest[4]
+                    'prize_pool': Number(contest[4]) / 1e18
                 }
             },
             getContestList() {

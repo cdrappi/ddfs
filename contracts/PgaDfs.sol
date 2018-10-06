@@ -255,7 +255,7 @@ contract PgaDfs is usingOraclize {
     contests[contestId] = Contest({
       owner : msg.sender,
       // entry fee is AUTOMATICALLY calculated by how much the owner deposits
-      entryFee : msg.value - calculateRake(msg.value),
+      entryFee : msg.value,
       live : true
     });
     payEntryFeeToContest(contestId, msg.sender, msg.value);
@@ -276,13 +276,13 @@ contract PgaDfs is usingOraclize {
 
     uint rakeToCollect = calculateRake(ethEntered);
 
-    require(ethEntered >= activeContest.entryFee + rakeToCollect);
+    require(ethEntered >= activeContest.entryFee);
 
-    activeContest.slateIdToPrizePool[slateId] += activeContest.entryFee;
+    activeContest.slateIdToPrizePool[slateId] += (activeContest.entryFee - rakeToCollect);
     extraEther += rakeToCollect;
     // if someone sends us extra money,
     // it goes their user balance
-    userBalances[msgSender] += ethEntered - activeContest.entryFee - rakeToCollect;
+    userBalances[msgSender] += (ethEntered - activeContest.entryFee);
     activeContest.slateIdToEntries[slateId].push(msgSender);
     activeContest.slateIdToEntered[slateId][msgSender] = true;
   }
