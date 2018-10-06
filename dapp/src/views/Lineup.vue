@@ -128,15 +128,12 @@
             return totalSalary
         },
         getPlayerIdsForLineupHash() {
-            var playerIdsToHash = '';
-            var index;
-            for (index in this.selectedResources) {
-                playerIdsToHash += String(this.selectedResources[index].pga_id);
-                if (!(index == this.selectedResources.length - 1)) {
-                    playerIdsToHash += ':';
-                }
+            var playerIdsListToHash = [];
+            for (let player of this.selectedResources) {
+                playerIdsListToHash.push(player.pga_id);
             }
-            return playerIdsToHash
+            playerIdsListToHash.sort();
+            return playerIdsListToHash.join(':')
         },
         hasDuplicatePlayers() {
           var seenGolferIds = {};

@@ -321,11 +321,7 @@ contract PgaDfs is usingOraclize {
     for (uint16 i = 0; i < playerScoreSlices.length; i++) {
       playerScoreSlices[i] = compressedScoresSlice.split(playerDelimiter);
       uint16 pgaPlayerId = uint16(parseInt(playerScoreSlices[i].split(":".toSlice()).toString()));
-      uint roundSlices = playerScoreSlices[i].count("-".toSlice()) + 1;
-      for (uint rd = 0; rd < roundSlices; rd++) {
-        int8 rdScore = int8(parseInt(playerScoreSlices[i].split("-".toSlice()).toString()));
-        slateIdToSlateGolfers[slateId][pgaPlayerId].points += int8(80) - rdScore;
-      }
+      slateIdToSlateGolfers[slateId][pgaPlayerId].points = int8(parseInt(playerScoreSlices[i].toString()));
     }
     slateIdToCompleteScoring[slateId] = true;
   }
