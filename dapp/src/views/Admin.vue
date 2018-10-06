@@ -113,7 +113,7 @@
 								this.compressedSalariesString,
 								{
 										from: window.bc.web3().eth.coinbase,
-										gas: 5800000,
+										gas: 8000000,
 										gasPrice: 20000000000
 								},
 								(err, txHash) => {

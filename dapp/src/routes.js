@@ -4,6 +4,7 @@ import AllLineups from '@/views/AllLineups'
 import Lineup from '@/views/Lineup'
 import Lobby from '@/views/Lobby'
 import Admin from '@/views/Admin'
+import NewContest from '@/views/NewContest'
 
 Vue.use(Router)
 
@@ -28,6 +29,11 @@ export default new Router({
           path: '/admin',
           name: 'Admin',
           component: Admin,
+        },
+        {
+          path: '/new-contest',
+          name: 'NewContest',
+          component: NewContest
         }
     ],
     linkActiveClass: 'active'

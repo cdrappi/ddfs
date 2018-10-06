@@ -9,6 +9,10 @@
                 <a>Lobby</a>
             </router-link>
 
+            <router-link tag="li" class="nav-link" to="/new-contest" exact>
+                <a>New Contest</a>
+            </router-link>
+
             <router-link tag="li" class="nav-link" to="/lineup" exact>
                 <a><strong>Your Lineup</strong></a>
             </router-link>

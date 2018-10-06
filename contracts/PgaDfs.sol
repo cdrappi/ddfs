@@ -271,7 +271,7 @@ contract PgaDfs is usingOraclize {
       // if they not are already in the contest, pay rake and enter
       uint rakeToCollect = calculateRake(ethEntered);
 
-      require(ethEntered > activeContest.entryFee + rakeToCollect);
+      require(ethEntered >= activeContest.entryFee + rakeToCollect);
 
       activeContest.prizePool += activeContest.entryFee;
       extraEther += rakeToCollect;

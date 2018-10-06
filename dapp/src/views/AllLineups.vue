@@ -93,11 +93,13 @@
                 var index;
                 for (index in pgaIdsBytes32) {
 									var pgaIdInt = pgaIdsBytes32[index];
-									if (pgaIdInt in this.golferIdToGolfer) {
-										lineup.push(this.golferIdToGolfer[pgaIdInt])
-									}
-									else {
-										console.warn('cannot find ' + pgaIdInt + ' in this.golferIdToGolfer');
+									if (pgaIdInt != 0) {
+										if (pgaIdInt in this.golferIdToGolfer) {
+											lineup.push(this.golferIdToGolfer[pgaIdInt])
+										}
+										else {
+											console.warn('cannot find ' + pgaIdInt + ' in this.golferIdToGolfer');
+										}
 									}
 				        }
 								return lineup;
