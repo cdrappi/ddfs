@@ -125,8 +125,8 @@ contract PgaDfs is usingOraclize {
     }
   }
 
-  function withdrawBalance() public payable external {
-    require(userBalances[msg.sender]);
+  function withdrawBalance() public payable {
+    require(userBalances[msg.sender] > 0);
     msg.sender.transfer(userBalances[msg.sender]);
     userBalances[msg.sender] = 0;
   }
