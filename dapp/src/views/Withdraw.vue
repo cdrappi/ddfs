@@ -15,10 +15,11 @@
         mixins: [mixin],
         data() {
             return {
+                contractBalanceEth: 0,
                 submitting: false,
                 errorSubmit: false,
                 successMessage: false,
-                contractBalanceEth: 0
+                bcConnected: false
             }
         },
         computed: {
@@ -55,24 +56,28 @@
                 )
             },
             getContractBalanceEth() {
-                window.bc.contract().getUserBalance.call(
-                    window.bc.web3().eth.coinbase,
-                    (err, balance) => {
-                        if (err) {
-                            console.log('error getUserBalance', err)
+                if (this.blockchainIsConnected()) {
+                    window.bc.contract().getUserBalance.call(
+                        window.bc.web3().eth.coinbase,
+                        (err, balance) => {
+                            if (err) {
+                                console.log('error getUserBalance', err)
+                            }
+                            else {
+                                return balance
+                            }
                         }
-                        else {
-                            return balance
-                        }
-                    }
-                )
+                    )
+                }
             },
             refreshContractBalanceEth() {
                 this.contractBalanceEth = this.getContractBalanceEth()
             }
         },
         created() {
-            this.refreshContractBalanceEth()
+            this.tmoConn = setInterval(() => {
+                this.refreshContractBalanceEth()
+            }, 1000)
         }
     }
 </script>
