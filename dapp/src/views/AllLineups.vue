@@ -74,49 +74,48 @@
                 }
                 return golferIdToGolfer;
             },
-			sumSalary(golfers) {
-				var totalSalary = 0;
-				var index;
-				for (index in golfers) {
-					totalSalary += golfers[index].eth_salary;
-				}
-				if (totalSalary) {
-					return totalSalary;
-				}
-				else {
-					return ""
-				}
-			},
+						sumSalary(golfers) {
+							var totalSalary = 0;
+							var index;
+							for (index in golfers) {
+								totalSalary += golfers[index].eth_salary;
+							}
+							if (totalSalary) {
+								return totalSalary;
+							}
+							else {
+								return ""
+							}
+						},
             formatPlayers(pgaIdsBytes32_) {
                 var pgaIdsBytes32 = this.dropBlanks(pgaIdsBytes32_);
                 var lineup = [];
                 var index;
                 for (index in pgaIdsBytes32) {
-					var pgaIdString = window.bc.web3inst.toAscii(pgaIdsBytes32[index]);
-					var pgaIdInt = parseInt(pgaIdString);
-					if (pgaIdInt in this.golferIdToGolfer) {
-						lineup.push(this.golferIdToGolfer[pgaIdInt])
-					}
-					else {
-						console.warn('cannot find ' + pgaIdInt + ' in this.golferIdToGolfer');
-					}
-                }
-				return lineup;
+									var pgaIdInt = pgaIdsBytes32[index];
+									if (pgaIdInt in this.golferIdToGolfer) {
+										lineup.push(this.golferIdToGolfer[pgaIdInt])
+									}
+									else {
+										console.warn('cannot find ' + pgaIdInt + ' in this.golferIdToGolfer');
+									}
+				        }
+								return lineup;
             },
-			joinPlayers(playersArray) {
-				var pgaNameIds = []
-				var index;
-				for (index in playersArray) {
-					var player = playersArray[index];
-					pgaNameIds.push(player["name"] + ' (' + player["pga_id"] + ')')
-				}
-				if (pgaNameIds.length) {
-					return pgaNameIds.join("\n");
-				}
-				else {
-					return "not yet revealed";
-				}
-			},
+						joinPlayers(playersArray) {
+							var pgaNameIds = []
+							var index;
+							for (index in playersArray) {
+								var player = playersArray[index];
+								pgaNameIds.push(player["name"] + ' (' + player["pga_id"] + ')')
+							}
+							if (pgaNameIds.length) {
+								return pgaNameIds.join("\n");
+							}
+							else {
+								return "not yet revealed";
+							}
+						},
             getAllLineupsList() {
                 if (this.blockchainIsConnected()) {
                     // it shows the loading message
@@ -128,10 +127,10 @@
                     this.getAllLineups((address, lineup) => {
                         this.isLoading = false
                         this.allLineups.push({
-							address: address,
-							hash: lineup[0],
-							players: this.formatPlayers(lineup[1])
-						})
+													address: address,
+													hash: lineup[0],
+													players: this.formatPlayers(lineup[1])
+												})
                     })
                 }
             },
@@ -145,7 +144,7 @@
             getAllLineups(callback) {
                 console.log('calling getEnteredAddressesForCurrentSlate allLineups L86')
 
-				// var address;
+								// var address;
                 window.bc.contract().getEnteredAddressesForCurrentSlate.call(
                     (err, addresses) => {
                         if (err) {
