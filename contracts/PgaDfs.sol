@@ -346,6 +346,7 @@ contract PgaDfs is usingOraclize {
     require(!contest.slateIdToPayoutsSet[slateId]);
 
     uint16 totalEntries = uint16(contest.slateIdToEntries[slateId].length);
+    uint remainingContestFunds = contest.slateIdToPrizePool[slateId];
     int totalPoints = 0;
 
     // calculate the average score in the contest
@@ -379,8 +380,12 @@ contract PgaDfs is usingOraclize {
         uint toPayout = (contest.slateIdToPrizePool[slateId] * squaredScore) / summedSquaredWinningScores;
         contest.recoup[slateId][entry] = toPayout;
         userBalances[entry] += toPayout;
+        remainingContestFunds -= toPayout;
       }
     }
+    // make sure we paid out the entire contest correctly
+    require(100 * remainingContestFunds < contest.slateIdToPrizePool[slateId]);
+    extraEther += remainingContestFunds;
     contest.slateIdToPayoutsSet[slateId] = true;
     contest.live = false;
   }
