@@ -30,7 +30,7 @@ contract PgaDfs is usingOraclize {
     // MAX of 8 pga tour ids...
     // you can play less than 8 guys if you want!
     // e.g. [web3.fromAscii("21059"), web3.fromAscii("94320"), web3.fromAscii("85933")]
-    bytes32[8] golferIds;
+    int8[8] golferIds;
   }
 
   struct Contest {
@@ -139,9 +139,9 @@ contract PgaDfs is usingOraclize {
 
 
   // slate id ==> golfer ids
-  mapping (bytes12 => bytes32[]) slateIdToGolferIds;
+  mapping (bytes12 => int8[]) slateIdToGolferIds;
   // slate id ==> pga tour id ==> golfer data (salary, scores, etc.)
-  mapping (bytes12 => mapping(bytes32 => SlateGolfer)) slateIdToSlateGolfers;
+  mapping (bytes12 => mapping(int8 => SlateGolfer)) slateIdToSlateGolfers;
   mapping (bytes12 => address[]) slateIdToEnteredAddresses;
   mapping (bytes12 => mapping (address => Lineup)) slateIdToLineups;
 
@@ -181,7 +181,7 @@ contract PgaDfs is usingOraclize {
       return slateIdToEnteredAddresses[slateId];
   }
 
-  function getCurrentSlateLineupForAddress(address address_) public view returns (bytes32, bytes32[8]) {
+  function getCurrentSlateLineupForAddress(address address_) public view returns (bytes32, int8[8]) {
       Lineup memory theLineup = slateIdToLineups[slateId][address_];
       return (theLineup.golferIdsHash, theLineup.golferIds);
   }
@@ -190,9 +190,8 @@ contract PgaDfs is usingOraclize {
     return slateId;
   }
 
-  function getSalary(string pgaId) public view returns (int8) {
-    bytes32 pgaIdBytes32 = toBytes32(pgaId);
-    return slateIdToSlateGolfers[slateId][pgaIdBytes32].salary;
+  function getSalary(int8 pgaId) public view returns (int8) {
+    return slateIdToSlateGolfers[slateId][pgaId].salary;
   }
 
   // lineups must:
@@ -202,7 +201,7 @@ contract PgaDfs is usingOraclize {
   function revealLineup(string golferIdsColonDelimited, string revealKey) public returns (int16) {
     require(slateIdToLineups[slateId][msg.sender].golferIdsHash == keccak256(strConcat(golferIdsColonDelimited, "|", revealKey)));
 
-    var golferIds = new bytes32[](8);
+    var golferIds = new int8[](8);
 
     var golferIdsSlice = golferIdsColonDelimited.toSlice();
     var delimiter = ":".toSlice();
@@ -218,7 +217,7 @@ contract PgaDfs is usingOraclize {
       // string  --> left padded bytes32
       // "29725" --> "0x3239373235000000000000000000000000000000000000000000000000000000"
       // replicate this with web3.fromAscii('29725')
-      bytes32 golferId = toBytes32(golferIdsSlice.split(delimiter).toString());
+      int8 golferId = parseInt(golferIdsSlice.split(delimiter).toString());
 
       for (uint8 jj = 0; jj < ii; jj++) {
         require(golferId != golferIds[jj]);
@@ -281,19 +280,6 @@ contract PgaDfs is usingOraclize {
     }
   }
 
-  // convert a string to bytes32 type using assembly
-  function toBytes32(string memory source) returns (bytes32 result) {
-    bytes memory tempEmptyStringTest = bytes(source);
-    if (tempEmptyStringTest.length == 0) {
-        return 0x0;
-    }
-
-    assembly {
-        result := mload(add(source, 32))
-    }
-}
-
-
   function setSalaries(string compressedSalaries) public {
       require(msg.sender == contractAdmin);
       // TODO: make internal / only contractAdmin
@@ -307,7 +293,7 @@ contract PgaDfs is usingOraclize {
       for (uint8 ii = 0; ii < playerCount; ii++) {
           var playerColonSalary = compressedSalariesSlice.split(playerDelimiter);
 
-          bytes32 pgaPlayerId = toBytes32(playerColonSalary.split(salaryDelimiter).toString());
+          int8 pgaPlayerId = parseInt(playerColonSalary.split(salaryDelimiter).toString());
 
           int8 salary = int8(parseInt(playerColonSalary.toString()));
 
@@ -329,7 +315,7 @@ contract PgaDfs is usingOraclize {
 
     for (uint16 i = 0; i < playerScoreSlices.length; i++) {
       playerScoreSlices[i] = compressedScoresSlice.split(playerDelimiter);
-      bytes32 pgaPlayerId = toBytes32(playerScoreSlices[i].split(":".toSlice()).toString());
+      int8 pgaPlayerId = parseInt(playerScoreSlices[i].split(":".toSlice()).toString());
       uint roundSlices = playerScoreSlices[i].count("-".toSlice()) + 1;
       for (uint rd = 0; rd < roundSlices; rd++) {
         int8 rdScore = int8(parseInt(playerScoreSlices[i].split("-".toSlice()).toString()));
@@ -354,7 +340,7 @@ contract PgaDfs is usingOraclize {
     // calculate the average score in the contest
     for (uint8 ii = 0; ii < totalEntries; ii++) {
       address entry = contest.slateIdToEntries[slateId][ii];
-      bytes32[8] memory entryPgaIds = slateIdToLineups[slateId][entry].golferIds;
+      int8[8] memory entryPgaIds = slateIdToLineups[slateId][entry].golferIds;
       for (uint8 g = 0; g < entryPgaIds.length; g++) {
         contest.slateIdToAddressScores[slateId][entry] += slateIdToSlateGolfers[slateId][entryPgaIds[g]].points;
       }
