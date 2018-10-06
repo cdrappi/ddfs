@@ -61,7 +61,7 @@
                     contestIdBytes32, {
                         from: window.bc.web3().eth.coinbase,
                         gas: 800000,
-                        value: entryFeeEth * 1e18 / 0.98
+                        value: entryFeeEth * 1e18
                     },
                     (err, txHash) => {
                         if (err) {

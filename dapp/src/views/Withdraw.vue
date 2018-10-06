@@ -29,7 +29,7 @@
              * not established.
              */
             disableSubmit() {
-                return this.contractBalanceEth
+                return !this.contractBalanceEth
             }
         },
         methods: {
@@ -55,7 +55,7 @@
                     }
                 )
             },
-            getContractBalanceEth() {
+            getContractBalanceEth(callback) {
                 if (this.blockchainIsConnected()) {
                     window.bc.contract().getUserBalance.call(
                         window.bc.web3().eth.coinbase,
@@ -64,14 +64,16 @@
                                 console.log('error getUserBalance', err)
                             }
                             else {
-                                return balance
+                                callback(balance)
                             }
                         }
                     )
                 }
             },
             refreshContractBalanceEth() {
-                this.contractBalanceEth = this.getContractBalanceEth()
+                this.getContractBalanceEth((balance) => {
+                    this.contractBalanceEth = balance / 1e18
+                })
             }
         },
         created() {

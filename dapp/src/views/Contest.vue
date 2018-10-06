@@ -15,7 +15,7 @@
                 <tr>
                     <th style="width:16%">Address</th>
                     <th style="width:22%">Points</th>
-                    <th style="width:20%">Recoup</th>
+                    <th style="width:20%">Recoup (ETH)</th>
                 </tr>
             </thead>
             <tbody>
@@ -100,7 +100,7 @@
                         this.allLineups.push({
                             address: address,
                             points: Number(points),
-                            recoup: Number(recoup)
+                            recoup: Number(recoup) / 1e18
                         })
                     })
                 }

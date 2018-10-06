@@ -125,6 +125,12 @@ contract PgaDfs is usingOraclize {
     }
   }
 
+  function withdrawBalance() public payable external {
+    require(userBalances[msg.sender]);
+    msg.sender.transfer(userBalances[msg.sender]);
+    userBalances[msg.sender] = 0;
+  }
+
   // active slate id to key slate/lineup mappings
   bytes12 slateId;
   mapping (bytes12 => uint) slateIdToLockTimestamp;
