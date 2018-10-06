@@ -380,7 +380,7 @@ contract PgaDfs is usingOraclize {
     // then pay out people proportional to squared points
     for (ii = 0; ii < winningEntries.length; ii++) {
       entry = winningEntries[ii];
-      int16 score = slateIdToEntryScores[slateId][entry];
+      score = slateIdToEntryScores[slateId][entry];
       // TODO: make sure there's no rounding error B.S. going on
       // that makes us massively over or under pay people
       squaredScore = uint(score * score);
