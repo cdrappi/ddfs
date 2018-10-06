@@ -139,6 +139,9 @@ contract PgaDfs is usingOraclize {
 
 
   // slate id ==> golfer ids
+  // NOTE: uint16 for golfer ids is really fucking pushing it,
+  // as PGA tour is on ID's around 55k or so.
+  // the max uint8 number is 65,535. lol
   mapping (bytes12 => uint16[]) slateIdToGolferIds;
   // slate id ==> pga tour id ==> golfer data (salary, scores, etc.)
   mapping (bytes12 => mapping(uint16 => SlateGolfer)) slateIdToSlateGolfers;
