@@ -133,7 +133,7 @@ contract PgaDfs is usingOraclize {
   }
 
   // active slate id to key slate/lineup mappings
-  bytes12 slateId;
+  bytes12[] slateIds;
   mapping (bytes12 => uint) slateIdToLockTimestamp;
 
   // format: "{pgaId}:{salary}"
@@ -143,7 +143,6 @@ contract PgaDfs is usingOraclize {
   // format: "{pgaId}:{rd1}-{rd2}-{rd3}-{rd4}"
   // example: "34360:69-66-67-71 32102:70-72-65-67"
   string compressedScoresUrl = ""; // e.g. "https://s3.amazonaws.com/ethdfs/pga/compressedScores/2018/471.json";
-
 
   // slate id ==> golfer ids
   // NOTE: uint16 for golfer ids is really fucking pushing it,
@@ -172,50 +171,50 @@ contract PgaDfs is usingOraclize {
   mapping (bytes12 => bool) slateIdToCompleteGolferScoring;
   mapping (bytes12 => bool) slateIdToCompleteLineupScoring;
 
-  function setLineupHash(bytes32 lineupHash) public {
+  function setLineupHash(bytes12 slateId_, bytes32 lineupHash) public {
     // can't change lineup hash after lock
-    require(block.timestamp <= slateIdToLockTimestamp[slateId]); //, "entries have locked");
-    Lineup storage theLineup = slateIdToLineups[slateId][msg.sender];
+    require(block.timestamp <= slateIdToLockTimestamp[slateId_]); //, "entries have locked");
+    Lineup storage theLineup = slateIdToLineups[slateId_][msg.sender];
     if (!theLineup.submittedHash) {
         // don't push duped addresses if they already have a lineup
-        slateIdToEnteredAddresses[slateId].push(msg.sender);
+        slateIdToEnteredAddresses[slateId_].push(msg.sender);
     }
     theLineup.golferIdsHash = lineupHash;
     theLineup.submittedHash = true;
   }
 
   // returns: Lineup.golferIdsHash
-  function getLineupHash(address entrantAddress) public view returns (bytes32) {
-    return slateIdToLineups[slateId][entrantAddress].golferIdsHash;
+  function getLineupHash(bytes12 slateId_, address entrantAddress) public view returns (bytes32) {
+    return slateIdToLineups[slateId_][entrantAddress].golferIdsHash;
   }
 
-  function getEnteredAddressesForCurrentSlate() public view returns (address[]) {
-      return slateIdToEnteredAddresses[slateId];
+  function getEnteredAddressesForSlate(bytes12 slateId_) public view returns (address[]) {
+      return slateIdToEnteredAddresses[slateId_];
   }
 
-  function getCurrentSlateLineupForAddress(address address_) public view returns (bytes32, uint16[8], int16) {
-      Lineup memory theLineup = slateIdToLineups[slateId][address_];
-      return (theLineup.golferIdsHash, theLineup.golferIds, slateIdToEntryScores[slateId][address_]);
+  function getLineupForSlateAddress(bytes12 slateId_, address address_) public view returns (bytes32, uint16[8], int16) {
+      Lineup memory theLineup = slateIdToLineups[slateId_][address_];
+      return (theLineup.golferIdsHash, theLineup.golferIds, slateIdToEntryScores[slateId_][address_]);
   }
 
-  function getSlateId() public view returns (bytes12) {
-    return slateId;
+  function getSlateIds() public view returns (bytes12[]) {
+    return slateIds;
   }
 
-  function getSalary(uint16 pgaId) public view returns (int8) {
-    return slateIdToSlateGolfers[slateId][pgaId].salary;
+  function getSalary(bytes12 slateId_, uint16 pgaId_) public view returns (int8) {
+    return slateIdToSlateGolfers[slateId_][pgaId_].salary;
   }
 
-  function getPoints(uint16 pgaId) public view returns (int8) {
-    return slateIdToSlateGolfers[slateId][pgaId].points;
+  function getPoints(bytes12 slateId_, uint16 pgaId_) public view returns (int8) {
+    return slateIdToSlateGolfers[slateId_][pgaId_].points;
   }
 
   // lineups must:
   // have 8 or less players
   // total salary must be <= salary cap
   // can only play the same guy once
-  function revealLineup(string golferIdsColonDelimited, string revealKey) public returns (int16) {
-    require(slateIdToLineups[slateId][msg.sender].golferIdsHash == keccak256(strConcat(golferIdsColonDelimited, "|", revealKey)));
+  function revealLineup(bytes12 slateId_, string golferIdsColonDelimited, string revealKey) public returns (int16) {
+    require(slateIdToLineups[slateId_][msg.sender].golferIdsHash == keccak256(strConcat(golferIdsColonDelimited, "|", revealKey)));
 
     var golferIds = new uint16[](8);
 
@@ -238,13 +237,13 @@ contract PgaDfs is usingOraclize {
         require(golferId != golferIds[jj]); //, "cannot duplicate golfer in lineup");
       }
       golferIds[ii] = golferId;
-      totalSalary += slateIdToSlateGolfers[slateId][golferId].salary;
+      totalSalary += slateIdToSlateGolfers[slateId_][golferId].salary;
     }
 
     require(totalSalary <= salaryCap); //, "must be under the salary cap");
 
     for (ii = 0; ii < golferIds.length; ii++) {
-      slateIdToLineups[slateId][msg.sender].golferIds[ii] = golferIds[ii];
+      slateIdToLineups[slateId_][msg.sender].golferIds[ii] = golferIds[ii];
     }
   }
 
@@ -252,11 +251,11 @@ contract PgaDfs is usingOraclize {
     return (wei_ * rakeTimesOneThousand) / 1000;
   }
 
-  function createContest(bytes32 contestId) public payable {
+  function createContest(bytes12 slateId_, bytes32 contestId) public payable {
     // contest id cannot be taken already
     require(!contests[contestId].live); //, "already exists live contest with that ID");
     // contest owner must first have lineup hash on chain
-    require(slateIdToLineups[slateId][msg.sender].submittedHash); //, "must submit hash before creating contest"
+    require(slateIdToLineups[slateId_][msg.sender].submittedHash); //, "must submit hash before creating contest"
 
     contestIds.push(contestId);
     contests[contestId] = Contest({
@@ -268,36 +267,35 @@ contract PgaDfs is usingOraclize {
     payEntryFeeToContest(contestId, msg.sender, msg.value);
   }
 
-  function enterContest(bytes32 contestId) public payable {
+  function enterContest(bytes12 slateId_, bytes32 contestId_) public payable {
     // to enter contest, user must have lineup hash on chain
-    Lineup memory entrantLineup = slateIdToLineups[slateId][msg.sender];
+    Lineup memory entrantLineup = slateIdToLineups[slateId_][msg.sender];
     require(entrantLineup.submittedHash); //, "must submit lineup hash before joining contest"
-    payEntryFeeToContest(contestId, msg.sender, msg.value);
+    payEntryFeeToContest(slateId_, contestId_, msg.sender, msg.value);
   }
 
-  function payEntryFeeToContest(bytes32 contestId, address msgSender, uint ethEntered) public payable {
+  function payEntryFeeToContest(bytes12 slateId_, bytes32 contestId_, address msgSender, uint ethEntered) public payable {
 
-    Contest storage activeContest = contests[contestId];
+    Contest storage activeContest = contests[contestId_];
     // if they not are already in the contest, pay rake and enter
-    require(!activeContest.slateIdToEntered[slateId][msgSender]); //, "already entered in this contest");
+    require(!activeContest.slateIdToEntered[slateId_][msgSender]); //, "already entered in this contest");
 
     uint rakeToCollect = calculateRake(ethEntered);
 
     require(ethEntered >= activeContest.entryFee); //, "must send >= eth as entry fee");
 
-    activeContest.slateIdToPrizePool[slateId] += (activeContest.entryFee - rakeToCollect);
+    activeContest.slateIdToPrizePool[slateId_] += (activeContest.entryFee - rakeToCollect);
     extraEther += rakeToCollect;
     // if someone sends us extra money,
     // it goes their user balance
     userBalances[msgSender] += (ethEntered - activeContest.entryFee);
-    activeContest.slateIdToEntries[slateId].push(msgSender);
-    activeContest.slateIdToEntered[slateId][msgSender] = true;
+    activeContest.slateIdToEntries[slateId_].push(msgSender);
+    activeContest.slateIdToEntered[slateId_][msgSender] = true;
   }
 
-  function setSalaries(string compressedSalaries) public {
+  function setSalaries(bytes12 slateId_, string compressedSalaries) public {
       require(msg.sender == contractAdmin); //, "only contractAdmin can set salaries");
-      // TODO: make internal / only contractAdmin
-      slateIdToCompleteGolferScoring[slateId] = false;
+      slateIdToCompleteGolferScoring[slateId_] = false;
 
       var compressedSalariesSlice = compressedSalaries.toSlice();
       var playerDelimiter = " ".toSlice();
@@ -309,16 +307,16 @@ contract PgaDfs is usingOraclize {
 
           uint16 pgaPlayerId = uint16(parseInt(playerColonSalary.split(salaryDelimiter).toString()));
 
-          slateIdToGolferIds[slateId].push(pgaPlayerId);
-          slateIdToSlateGolfers[slateId][pgaPlayerId].salary = int8(parseInt(playerColonSalary.toString()));
+          slateIdToGolferIds[slateId_].push(pgaPlayerId);
+          slateIdToSlateGolfers[slateId_][pgaPlayerId].salary = int8(parseInt(playerColonSalary.toString()));
       }
   }
 
-  function setScores(string compressedScores) public {
+  function setScores(bytes12 slateId_, string compressedScores) public {
     // TODO: make internal / only contractAdmin
     // TODO: really make sure this works
     // TODO: difference between var and normal types?
-    require(!slateIdToCompleteGolferScoring[slateId]); //, "already completed golfer scoring for this slate");
+    require(!slateIdToCompleteGolferScoring[slateId_]); //, "already completed golfer scoring for this slate");
 
     var compressedScoresSlice = compressedScores.toSlice();
     var playerDelimiter = " ".toSlice();
@@ -327,9 +325,9 @@ contract PgaDfs is usingOraclize {
     for (uint16 i = 0; i < playerScoreSlices.length; i++) {
       playerScoreSlices[i] = compressedScoresSlice.split(playerDelimiter);
       uint16 pgaPlayerId = uint16(parseInt(playerScoreSlices[i].split(":".toSlice()).toString()));
-      slateIdToSlateGolfers[slateId][pgaPlayerId].points = int8(parseInt(playerScoreSlices[i].toString()));
+      slateIdToSlateGolfers[slateId_][pgaPlayerId].points = int8(parseInt(playerScoreSlices[i].toString()));
     }
-    slateIdToCompleteGolferScoring[slateId] = true;
+    slateIdToCompleteGolferScoring[slateId_] = true;
   }
 
   function scoreEnteredAddresses(bytes12 slateId_) public {
@@ -343,23 +341,23 @@ contract PgaDfs is usingOraclize {
     }
   }
 
-  function setSingleContestPayouts(bytes32 contestId) public {
+  function setSingleContestPayouts(bytes12 slateId_, bytes32 contestId_) public {
     // everyone who scores > max(0, the contest average) gets paid
     // you are paid proportional to your squared score
-    require(slateIdToCompleteGolferScoring[slateId]); //, "must complete golfer & lineup scoring before determining contest payouts");
+    require(slateIdToCompleteGolferScoring[slateId_]); //, "must complete golfer & lineup scoring before determining contest payouts");
 
-    Contest storage contest = contests[contestId];
+    Contest storage contest = contests[contestId_];
     require(contest.live); //, "contest is not live");
-    require(!contest.slateIdToPayoutsSet[slateId]); //,"contest payouts have already been set");
+    require(!contest.slateIdToPayoutsSet[slateId_]); //,"contest payouts have already been set");
 
-    uint16 totalEntries = uint16(contest.slateIdToEntries[slateId].length);
-    uint remainingContestFunds = contest.slateIdToPrizePool[slateId];
+    uint16 totalEntries = uint16(contest.slateIdToEntries[slateId_].length);
+    uint remainingContestFunds = contest.slateIdToPrizePool[slateId_];
     int totalPoints = 0;
 
     // calculate the average score in the contest
     for (uint8 ii = 0; ii < totalEntries; ii++) {
-      address entry = contest.slateIdToEntries[slateId][ii];
-      totalPoints += slateIdToEntryScores[slateId][entry];
+      address entry = contest.slateIdToEntries[slateId_][ii];
+      totalPoints += slateIdToEntryScores[slateId_][entry];
     }
 
     // of the top half (except any of those that scored < 0),
@@ -368,8 +366,8 @@ contract PgaDfs is usingOraclize {
     uint summedSquaredWinningScores = 0;
 
     for (ii = 0; ii < totalEntries; ii++) {
-      entry = contest.slateIdToEntries[slateId][ii];
-      int16 score = slateIdToEntryScores[slateId][entry];
+      entry = contest.slateIdToEntries[slateId_][ii];
+      int16 score = slateIdToEntryScores[slateId_][entry];
       if (score >= averagePointsRoundedDown && score >= 0) {
         uint squaredScore = uint(score) * uint(score);
         summedSquaredWinningScores += squaredScore;
@@ -378,20 +376,20 @@ contract PgaDfs is usingOraclize {
 
     // then pay out people proportional to squared points
     for (ii = 0; ii < totalEntries; ii++) {
-      entry = contest.slateIdToEntries[slateId][ii];
-      score = slateIdToEntryScores[slateId][entry];
+      entry = contest.slateIdToEntries[slateId_][ii];
+      score = slateIdToEntryScores[slateId_][entry];
       if (score >= averagePointsRoundedDown && score >= 0) {
         // TODO: make sure there's no rounding error B.S. going on
         // that makes us massively over or under pay people
         squaredScore = uint(score) * uint(score);
-        uint toPayout = (contest.slateIdToPrizePool[slateId] * squaredScore) / summedSquaredWinningScores;
+        uint toPayout = (contest.slateIdToPrizePool[slateId_] * squaredScore) / summedSquaredWinningScores;
         contest.recoup[slateId][entry] = toPayout;
         userBalances[entry] += toPayout;
         remainingContestFunds -= toPayout;
       }
     }
     // make sure we paid out the entire contest correctly
-    require(100 * remainingContestFunds < contest.slateIdToPrizePool[slateId]); //, "due to rounding errors we paid out the contest incorrectly");
+    require(100 * remainingContestFunds < contest.slateIdToPrizePool[slateId_]); //, "due to rounding errors we paid out the contest incorrectly");
     extraEther += remainingContestFunds;
     contest.slateIdToPayoutsSet[slateId] = true;
     contest.live = false;
@@ -436,8 +434,9 @@ contract PgaDfs is usingOraclize {
     uint lockTimestamp
   ) public {
     require(msg.sender == contractAdmin); //, "only contract admin can perform this action");
-    slateId = _newSlateId;
-    slateIdToLockTimestamp[slateId] = lockTimestamp;
+    require(!slateIdToLockTimestamp[_newSlateId]); // "already created a slate with this id"
+    slateIds.push(_newSlateId);
+    slateIdToLockTimestamp[_newSlateId] = lockTimestamp;
     _setCompressedScoresUrl(_compressedScoresUrl);
     _setCompressedSalariesUrl(_compressedSalariesUrl);
   }
@@ -492,25 +491,25 @@ contract PgaDfs is usingOraclize {
     return contestIds;
   }
 
-  function getContestById(bytes32 contestId) public view returns (
+  function getSlateContest(bytes12 slateId_, bytes32 contestId_) public view returns (
       bytes32,
       uint,
       uint,
       address,
       uint
     ) {
-      Contest storage contest = contests[contestId];
+      Contest storage contest = contests[contestId_];
       return (
-          contestId,
+          contestId_,
           contest.entryFee,
-          contest.slateIdToEntries[slateId].length,
+          contest.slateIdToEntries[slateId_].length,
           contest.owner,
-          contest.slateIdToPrizePool[slateId]
+          contest.slateIdToPrizePool[slateId_]
         );
     }
 
-  function getContestEntries(bytes12 slateId_, bytes32 contestId) public view returns (address[]) {
-    return contests[contestId].slateIdToEntries[slateId_];
+  function getContestEntries(bytes12 slateId_, bytes32 contestId_) public view returns (address[]) {
+    return contests[contestId_].slateIdToEntries[slateId_];
   }
 
   function getContestRecoup(bytes12 slateId_, bytes32 contestId_, address address_) public view returns (uint) {
@@ -521,8 +520,8 @@ contract PgaDfs is usingOraclize {
     return contests[contestId_].slateIdToPrizePool[slateId_];
   }
 
-  function getEntryScore(bytes12 slateId_, address entryAddress) public view returns (int16) {
-    return slateIdToEntryScores[slateId_][entryAddress];
+  function getEntryScore(bytes12 slateId_, address entry_) public view returns (int16) {
+    return slateIdToEntryScores[slateId_][entry_];
   }
 
   function getGolferIdsOnSlate(bytes12 slateId_) public view returns (uint16[]) {
