@@ -54,6 +54,23 @@
 					</p>
 			</div>
 		</div>
+		<br><br>
+		<div class="row">
+				<div class="col-md-3">
+					<div class="form-group">
+							<label for="description">Scores string</label>
+							<input class="form-control" type="text" v-model="compressedScoresString">
+					</div>
+
+					<button class="btn btn-primary" @click="submitCompressedScores">Submit Compressed Scores</button>
+						<strong v-show="submitting">Submitting...</strong>
+						<strong v-show="errorSubmit" class="text-danger">Error occurred!</strong>
+
+						<p v-show="successMessage" class="text-success">
+								<strong>Set scores on chain</strong>
+						</p>
+				</div>
+		</div>
 	</div>
 </template>
 
