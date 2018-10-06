@@ -3,12 +3,7 @@ function getPgaCookieName(address) {
 }
 
 function getCookie(name) {
-    var value = "; " + document.cookie;
-    var parts = value.split("; " + name + "=");
-    if (parts && parts.length == 2) {
-        return parts.pop().split(";").shift();
-    }
-    return '';
+    return localStorage.getItem(name);
 }
 
 function getPgaIdsFromCookie(address) {

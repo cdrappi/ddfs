@@ -169,15 +169,15 @@
         saveToCookie() {
           // save map of lineup hash to player ids in cookie
           // so it can be easily revealed later
-          document.cookie = (
-            getPgaCookieName(window.bc.web3().eth.coinbase)
-            + '=' + this.getPlayerIdsForLineupHash()
+          localStorage.setItem(
+            getPgaCookieName(window.bc.web3().eth.coinbase),
+            this.getPlayerIdsForLineupHash()
           );
         },
         saveRevealKeyToCookie() {
-          document.cookie = (
-            getPgaCookieName(window.bc.web3().eth.coinbase)
-            + 'key=' + this.revealKey
+          localStorage.setItem(
+            getPgaCookieName(window.bc.web3().eth.coinbase) + 'key',
+            this.revealKey
           );
         },
         saveLineupHashOnChain() {
