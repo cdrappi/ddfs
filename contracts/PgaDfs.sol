@@ -364,7 +364,7 @@ contract PgaDfs is usingOraclize {
       entry = contest.slateIdToEntries[slateId][ii];
       int16 score = slateIdToEntryScores[slateId][entry];
       if (score >= averagePointsRoundedDown && score >= 0) {
-        uint squaredScore = uint(score * score);
+        uint squaredScore = uint(score) * uint(score);
         summedSquaredWinningScores += squaredScore;
       }
     }
@@ -376,7 +376,7 @@ contract PgaDfs is usingOraclize {
       if (score >= averagePointsRoundedDown && score >= 0) {
         // TODO: make sure there's no rounding error B.S. going on
         // that makes us massively over or under pay people
-        squaredScore = uint(score * score);
+        squaredScore = uint(score) * uint(score);
         uint toPayout = (contest.slateIdToPrizePool[slateId] * squaredScore) / summedSquaredWinningScores;
         contest.recoup[slateId][entry] = toPayout;
         userBalances[entry] += toPayout;
