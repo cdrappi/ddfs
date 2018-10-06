@@ -267,22 +267,22 @@ contract PgaDfs is usingOraclize {
   function payEntryFeeToContest(bytes32 contestId, address msgSender, uint ethEntered) public payable {
 
     Contest storage activeContest = contests[contestId];
-    if (!activeContest.slateIdToEntered[slateId][msgSender]) {
-      // if they not are already in the contest, pay rake and enter
-      uint rakeToCollect = calculateRake(ethEntered);
+    // if they not are already in the contest, pay rake and enter
+    require(!activeContest.slateIdToEntered[slateId][msgSender]);
 
-      require(ethEntered >= activeContest.entryFee + rakeToCollect);
+    uint rakeToCollect = calculateRake(ethEntered);
 
-      activeContest.prizePool += activeContest.entryFee;
-      extraEther += rakeToCollect;
-      // if someone sends us extra money,
-      // it goes their balance for the contest
-      // and by default they can get paid out at the end
-      // otherwise they can withdraw
-      activeContest.balances[msgSender] += ethEntered - activeContest.entryFee - rakeToCollect;
-      activeContest.slateIdToEntries[slateId].push(msgSender);
-      activeContest.slateIdToEntered[slateId][msgSender] = true;
-    }
+    require(ethEntered >= activeContest.entryFee + rakeToCollect);
+
+    activeContest.prizePool += activeContest.entryFee;
+    extraEther += rakeToCollect;
+    // if someone sends us extra money,
+    // it goes their balance for the contest
+    // and by default they can get paid out at the end
+    // otherwise they can withdraw
+    activeContest.balances[msgSender] += ethEntered - activeContest.entryFee - rakeToCollect;
+    activeContest.slateIdToEntries[slateId].push(msgSender);
+    activeContest.slateIdToEntered[slateId][msgSender] = true;
   }
 
   function setSalaries(string compressedSalaries) public {

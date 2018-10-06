@@ -13,14 +13,14 @@
             <thead class="thead-dark">
                 <tr>
                     <th>Contest ID</th>
-                    <th>Buyin</th>
+                    <th>Buyin (ETH)</th>
                     <th>Entrants</th>
                     <th>Owner Address</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="contest in contests">
-                    <td>{{ contest["id"] }}</td>
+                    <td><button @click="enterContest(contest.id, contest.entryFeeEth)">{{ contest["id"] }}</button></td>
                     <td>{{ contest["entryFeeEth"] }}</td>
                     <td>{{ contest["entries"] }}</td>
                     <td>{{ contest["owner"] }}</td>
@@ -52,11 +52,31 @@
              * Get the list of all live contests users once the connection to the
              * blockchain is established.
              */
+						enterContest(contestId, entryFeeEth) {
+							let contestIdBytes32 = web3.fromAscii(contestId);
+							console.log(contestIdBytes32);
+							window.bc.contract().enterContest(
+	                contestIdBytes32,
+	                {
+	                    from: window.bc.web3().eth.coinbase,
+	                    gas: 800000,
+											value: (entryFeeEth * 1e18 / 0.98)
+	                },
+	                (err, txHash) => {
+	                    if (err) {
+	                        console.error('error calling enterContest: ', err)
+	                    }
+	                    else {
+	                        console.log('success calling enterContest')
+	                    }
+	                }
+	            )
+						},
 						formatContest(contest) {
 								return {
 									'id': web3.toAscii(contest[0]),
 									'entryFeeEth': contest[1] / 1e18,
-									'entries': contest[2],
+									'entries': Number(contest[2]),
 									'owner': contest[3]
 								}
 						},
