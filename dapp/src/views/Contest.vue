@@ -131,11 +131,10 @@
                             for (let address of addresses) {
                                 window.bc.contract().getEntryScore.call(
                                     this.bytesSlate(),
-                                    this.bytesContest(),
                                     address,
                                     (getEntryScoreError, entryPoints) => {
                                         if (getEntryScoreError) {
-                                            console.log('error calling getEntryScore: ', getEntryScore)
+                                            console.log('error calling getEntryScore: ', getEntryScoreError)
                                         } else {
                                             callback(address, entryPoints)
                                         }

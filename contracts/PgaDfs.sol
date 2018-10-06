@@ -332,7 +332,7 @@ contract PgaDfs is usingOraclize {
   }
 
   function scoreEnteredAddresses(bytes12 slateId_) public {
-    require(slateIdToCompleteScoring[slateId]);
+    require(slateIdToCompleteScoring[slateId_]);
     for (uint8 ii = 0; ii < slateIdToEnteredAddresses[slateId_].length; ii++) {
       address entry = slateIdToEnteredAddresses[slateId_][ii];
       uint16[8] memory entryPgaIds = slateIdToLineups[slateId_][entry].golferIds;

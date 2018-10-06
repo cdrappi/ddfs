@@ -70,6 +70,10 @@
 				</p>
 			</div>
 		</div>
+		<br><br>
+		<div>
+			<button class="btn btn-primary" :disabled="disableScoreEntries" @click="submitScoreEntries">Score Entries</button>
+		</div>
 	</div>
 </template>
 
@@ -132,9 +136,15 @@
 					this.submitting ||
 					!this.blockchainIsConnected()
 				)
+			},
+			disableScoreEntries() {
+				return false;
 			}
 		},
 		methods: {
+			bytesSlate() {
+				return web3.fromAscii(this.slateId)
+			},
 			submitCompressedSalaries() {
 				console.log('calling setSalaries Admin.vue L112')
 				window.bc.contract().setSalaries(
@@ -150,6 +160,23 @@
 						} else {
 							this.successMessage = true
 							console.log('successfully called setSalaries: -->', txHash, '<--')
+						}
+					}
+				)
+			},
+			submitScoreEntries() {
+				window.bc.contract().scoreEnteredAddresses(
+					this.bytesSlate(),
+					{
+						from: window.bc.web3().eth.coinbase,
+						gas: 8000000,
+						gasPrice: 20000000000
+					},
+					(err, txHash) => {
+						if (err) {
+							console.error('error scoring entered addresses', err)
+						} else {
+							console.log('successfully scored entered addresses', txHash)
 						}
 					}
 				)
