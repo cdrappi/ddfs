@@ -363,8 +363,6 @@ contract PgaDfs is usingOraclize {
     // of the top half (except any of those that scored < 0),
     // sum up the squared scores
     int averagePointsRoundedDown = totalPoints / totalEntries;
-    // ugh... only using storage since memory isnt dynamic
-    address[] storage winningEntries;
     uint summedSquaredWinningScores = 0;
 
     for (ii = 0; ii < totalEntries; ii++) {
@@ -372,22 +370,22 @@ contract PgaDfs is usingOraclize {
       int16 score = slateIdToEntryScores[slateId][entry];
       if (score >= averagePointsRoundedDown && score >= 0) {
         uint squaredScore = uint(score * score);
-        winningEntries.push(entry);
         summedSquaredWinningScores += squaredScore;
       }
     }
 
     // then pay out people proportional to squared points
-    for (ii = 0; ii < winningEntries.length; ii++) {
+    for (ii = 0; ii < totalEntries; ii++) {
       entry = winningEntries[ii];
       score = slateIdToEntryScores[slateId][entry];
-      // TODO: make sure there's no rounding error B.S. going on
-      // that makes us massively over or under pay people
-      squaredScore = uint(score * score);
-      uint toPayout = (contest.prizePool * squaredScore) / summedSquaredWinningScores;
-      contest.balances[entry] += toPayout;
+      if (score >= averagePointsRoundedDown && score >= 0) {
+        // TODO: make sure there's no rounding error B.S. going on
+        // that makes us massively over or under pay people
+        squaredScore = uint(score * score);
+        uint toPayout = (contest.prizePool * squaredScore) / summedSquaredWinningScores;
+        contest.balances[entry] += toPayout;
+      }
     }
-
     contest.slateIdToPayoutsSet[slateId] = true;
   }
 
