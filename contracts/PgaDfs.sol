@@ -54,9 +54,8 @@ contract PgaDfs is usingOraclize {
     mapping (bytes12 => mapping(address => bool)) slateIdToEntered;
     mapping (bytes12 => mapping(address => int32)) slateIdToAddressScores;
 
-    // ETH address --> how much they recouped
-    // once we confirmed the event ends, then payout!
-    mapping(address => uint) balances;
+    // slate --> ETH address --> how much they recouped
+    mapping(bytes12 => mapping(address => uint)) recoup;
   }
 
 
@@ -69,6 +68,8 @@ contract PgaDfs is usingOraclize {
   address public contractAdmin;
   uint private extraEther;
   uint private minBal;
+
+  mapping(address => uint) userBalances;
 
   // status (bool): is this oraclize query complete or not?
   mapping(bytes32 => string) queryIdToCallbackAction;
@@ -282,10 +283,8 @@ contract PgaDfs is usingOraclize {
     activeContest.prizePool += activeContest.entryFee;
     extraEther += rakeToCollect;
     // if someone sends us extra money,
-    // it goes their balance for the contest
-    // and by default they can get paid out at the end
-    // otherwise they can withdraw
-    activeContest.balances[msgSender] += ethEntered - activeContest.entryFee - rakeToCollect;
+    // it goes their user balance
+    userBalances[msgSender] += ethEntered - activeContest.entryFee - rakeToCollect;
     activeContest.slateIdToEntries[slateId].push(msgSender);
     activeContest.slateIdToEntered[slateId][msgSender] = true;
   }
@@ -380,33 +379,16 @@ contract PgaDfs is usingOraclize {
         // that makes us massively over or under pay people
         squaredScore = uint(score * score);
         uint toPayout = (contest.prizePool * squaredScore) / summedSquaredWinningScores;
-        contest.balances[entry] += toPayout;
+        contest.recoup[slateId][entry] = toPayout;
+        userBalances[entry] += toPayout;
       }
     }
     contest.slateIdToPayoutsSet[slateId] = true;
-  }
-
-  function withdrawBalanceFromContest(bytes32 contestId, address entry) public payable {
-    Contest storage contest = contests[contestId];
-    require (contest.balances[entry] > 0);
-    entry.transfer(contest.balances[entry]);
-    contest.balances[entry] = 0;
-  }
-
-  function payOutContest(bytes32 contestId) public payable {
-    require(slateIdToCompleteScoring[slateId]);
-
-    Contest storage contest = contests[contestId];
-    require(contest.slateIdToPayoutsSet[slateId]);
-    require(contest.live);
-
-    for (uint ii = 0; ii < contest.slateIdToEntries[slateId].length; ii++) {
-      address entry = contest.slateIdToEntries[slateId][ii];
-      if (contest.balances[entry] > 0) {
-        withdrawBalanceFromContest(contestId, entry);
-      }
-    }
     contest.live = false;
+  }
+
+  function getUserBalance(address address_) public view returns (uint) {
+    return userBalances[address_];
   }
 
   function _setCompressedScoresUrl(string _compressedScoresUrl) internal {
@@ -526,8 +508,11 @@ contract PgaDfs is usingOraclize {
     }
 
   function getContestEntries(bytes12 slateId_, bytes32 contestId) public view returns (address[]) {
-    Contest storage contest = contests[contestId];
-    return contest.slateIdToEntries[slateId_];
+    return contests[contestId].slateIdToEntries[slateId_];
+  }
+
+  function getContestRecoup(bytes12 slateId_, bytes32 contestId_, address address_) public view returns (uint) {
+    return contests[contestId_].recoup[slateId_][address_];
   }
 
   function getEntryScore(bytes12 slateId_, address entryAddress) public view returns (int16) {

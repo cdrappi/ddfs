@@ -190,7 +190,7 @@
                 this.getLineupHash(),
                 {
                     from: window.bc.web3().eth.coinbase,
-                    gas: 800000
+                    gas: 200000
                 },
                 (err, txHash) => {
                     if (err) {
@@ -229,7 +229,7 @@
                         this.revealKey,
                         {
                             from: window.bc.web3().eth.coinbase,
-                            gas: 800000
+                            gas: 1000000
                         },
                         (err, res) => {
                             if (err) {

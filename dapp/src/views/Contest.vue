@@ -15,17 +15,18 @@
                 <tr>
                     <th style="width:16%">Address</th>
                     <th style="width:22%">Points</th>
+                    <th style="width:20%">Recoup</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="lineup in allLineups">
                     <td>{{ lineup["address"] }}</td>
                     <td>{{ lineup["points"] }}</td>
+                    <td>{{ lineup["recoup"] }}</td>
                 </tr>
             </tbody>
         </table>
         <br>
-        <button class="btn btn-primary float-right btn-top" @click="withdrawBalance">Withdraw Balance</button>
     </div>
 </template>
 
@@ -53,23 +54,6 @@
             }
         },
         methods: {
-            withdrawBalance() {
-                window.bc.contract().withdrawBalanceFromContest(
-                    this.bytesContest(),
-                    {
-                        from: window.bc.web3().eth.coinbase,
-                        gas: 80000,
-						gasPrice: 20000000000,
-                    },
-                    (err, txHash) => {
-                        if (err) {
-							console.error('error calling withdrawBalanceFromContest', err)
-						} else {
-							console.log('successfully called withdrawBalanceFromContest: -->', txHash, '<--')
-						}
-                    }
-                )
-            },
             scoreContest() {
                 window.bc.contract().setSingleContestPayouts(
                     this.bytesContest(), 
@@ -111,11 +95,12 @@
                     clearInterval(this.tmoConn)
                     // TODO: get contests in lobby
                     // getting all the users from the blockchain
-                    this.getAllLineups((address, points) => {
+                    this.getAllLineups((address, points, recoup) => {
                         this.isLoading = false
                         this.allLineups.push({
                             address: address,
-                            points: Number(points)
+                            points: Number(points),
+                            recoup: Number(recoup)
                         })
                     })
                 }
@@ -155,7 +140,18 @@
                                         if (getEntryScoreError) {
                                             console.log('error calling getEntryScore: ', getEntryScoreError)
                                         } else {
-                                            callback(address, entryPoints)
+                                            window.bc.contract().getContestRecoup.call(
+                                                this.bytesSlate(),
+                                                this.bytesContest(),
+                                                address,
+                                                (getContestRecoupError, recoup) => {
+                                                    if (getContestRecoupError) {
+                                                        console.log('getContestRecoupError:', getContestRecoupError)
+                                                    } else {
+                                                        callback(address, entryPoints, recoup)
+                                                    }
+                                                }
+                                            )
                                         }
                                     }
                                 )
