@@ -37,7 +37,6 @@ contract PgaDfs is usingOraclize {
     address owner; // creator of contest
 
     uint entryFee; // TODO(christian): what units? wei?
-    uint prizePool; // TODO: delete
     // all money in contest balance, payable to winners
     mapping (bytes12 => uint) slateIdToPrizePool;
 
@@ -257,7 +256,6 @@ contract PgaDfs is usingOraclize {
       owner : msg.sender,
       // entry fee is AUTOMATICALLY calculated by how much the owner deposits
       entryFee : msg.value - calculateRake(msg.value),
-      prizePool: 0, // updated in payEntryFeeToContest below
       live : true
     });
     payEntryFeeToContest(contestId, msg.sender, msg.value);
@@ -280,7 +278,7 @@ contract PgaDfs is usingOraclize {
 
     require(ethEntered >= activeContest.entryFee + rakeToCollect);
 
-    activeContest.prizePool += activeContest.entryFee;
+    activeContest.slateIdToPrizePool[slateId] += activeContest.entryFee;
     extraEther += rakeToCollect;
     // if someone sends us extra money,
     // it goes their user balance
@@ -378,7 +376,7 @@ contract PgaDfs is usingOraclize {
         // TODO: make sure there's no rounding error B.S. going on
         // that makes us massively over or under pay people
         squaredScore = uint(score * score);
-        uint toPayout = (contest.prizePool * squaredScore) / summedSquaredWinningScores;
+        uint toPayout = (contest.slateIdToPrizePool[slateId] * squaredScore) / summedSquaredWinningScores;
         contest.recoup[slateId][entry] = toPayout;
         userBalances[entry] += toPayout;
       }
@@ -513,6 +511,10 @@ contract PgaDfs is usingOraclize {
 
   function getContestRecoup(bytes12 slateId_, bytes32 contestId_, address address_) public view returns (uint) {
     return contests[contestId_].recoup[slateId_][address_];
+  }
+
+  function getContestPrizePool(bytes12 slateId_, bytes32 contestId_) public view returns (uint) {
+    return contests[contestId_].slateIdToPrizePool[slateId_];
   }
 
   function getEntryScore(bytes12 slateId_, address entryAddress) public view returns (int16) {
