@@ -12,12 +12,12 @@ results = response.json()
 
 scores_list = []
 for player in results['leaderboard']['players']:
-    rounds_string = '-'.join([
-        str(int(rd['strokes']))  # must be int-able
+    fantasy_points = sum(
+        80 - int(rd['strokes'])  # must be int-able
         for rd in player['rounds']
         if rd['strokes']  # want to prevent 0s and Nones
-    ])
-    scores_list.append(f'{player["player_id"]}:{rounds_string}')
+    )
+    scores_list.append(f'{int(player["player_id"])}:{fantasy_points}')
 
 scores_string = ' '.join(scores_list)
 
@@ -28,3 +28,6 @@ s3.write_data(
     }),
     key=f'compressedScores/{year}/{pga_tournament_id}.json'
 )
+
+
+scores_string
