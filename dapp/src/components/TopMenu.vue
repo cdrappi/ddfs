@@ -14,15 +14,19 @@
             </router-link>
 
             <router-link tag="li" class="nav-link" to="/lineup" exact>
-                <a><strong>Your Lineup</strong></a>
+                <a>Your Lineup</a>
             </router-link>
 
             <router-link tag="li" class="nav-link" to="/lineups" exact>
-                <a><strong>All Lineups</strong></a>
+                <a>All Lineups</a>
             </router-link>
 
             <router-link tag="li" class="nav-link" to="/scores" exact>
                 <a>Scores</a>
+            </router-link>
+
+            <router-link tag="li" class="nav-link" to="/withdraw" exact>
+                <a>Withdraw</a>
             </router-link>
 
             <router-link tag="li" class="nav-link" to="/admin" exact>
@@ -35,6 +39,7 @@
                     {{ bcConnected ? 'Connected' : 'Not Connected' }}
                 </strong>
             </li>
+
         </ul>
     </nav>
 </template>

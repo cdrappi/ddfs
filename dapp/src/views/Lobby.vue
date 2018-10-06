@@ -61,7 +61,7 @@
                     contestIdBytes32, {
                         from: window.bc.web3().eth.coinbase,
                         gas: 800000,
-                        value: (entryFeeEth * 1e18 / 0.98)
+                        value: entryFeeEth * 1e18 / 0.98
                     },
                     (err, txHash) => {
                         if (err) {
@@ -78,10 +78,10 @@
             formatContest(contest) {
                 return {
                     'id': web3.toAscii(contest[0]),
-                    'entryFeeEth': contest[1] / 1e18,
+                    'entryFeeEth': (Number(contest[1] / 1e18)).toFixed(2),
                     'entries': Number(contest[2]),
                     'owner': contest[3],
-                    'prize_pool': Number(contest[4]) / 1e18
+                    'prize_pool': Number(contest[4] / 1e18).toFixed(2)
                 }
             },
             getContestList() {

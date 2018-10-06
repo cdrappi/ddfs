@@ -7,6 +7,7 @@ import Admin from '@/views/Admin'
 import NewContest from '@/views/NewContest'
 import Scores from '@/views/Scores'
 import Contest from '@/views/Contest'
+import Withdraw from '@/views/Withdraw'
 
 Vue.use(Router)
 
@@ -46,6 +47,11 @@ export default new Router({
           path: '/contest/:contestId',
           name: 'Contest',
           component: Contest
+        },
+        {
+            path: '/withdraw',
+            name: 'Withdraw',
+            component: Withdraw
         }
     ],
     linkActiveClass: 'active'
