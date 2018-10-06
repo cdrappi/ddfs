@@ -63,9 +63,11 @@
     export default {
 			mixins: [mixin],
     	data() {
+				var date = new Date();
+				var timestamp = date.getTime();
     		return {
     			slateId: "pga-r2018-490", // variable binded with the input field: name
-    			lockTimestamp: 1536550381, // variable binded with the input field: status
+    			lockTimestamp: timestamp + 172800, // variable binded with the input field: status
 					compressedSalariesUrl: "https://s3.amazonaws.com/ethdfs/pga/compressedSalaries/2018/490.json",
 					compressedScoresUrl: "https://s3.amazonaws.com/ethdfs/pga/compressedScores/2018/490.json",
           submitting: false, // true once the submit button is pressed
