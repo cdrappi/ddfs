@@ -44,6 +44,7 @@
         mixins: [mixin],
         data() {
             return {
+                slateId: "pga-r2018-490",
                 allScores: [],
                 isLoading: true, // true when the user list is loading form the blockchain
                 bcConnected: false, // blockchain is connected ()
@@ -52,16 +53,6 @@
             }
         },
         methods: {
-            dropBlanks(playerIds) {
-                var playerIdsNoBlanks = [];
-                var index;
-                for (index in playerIds) {
-                    if (playerIds[index] != 0) {
-                        playerIdsNoBlanks.push(playerIds[index]);
-                    }
-                }
-                return playerIdsNoBlanks;
-            },
             getGolferIdToGolfer() {
                 var golferIdToGolfer = {};
                 var golfers = getGolfers();
@@ -72,51 +63,13 @@
                 }
                 return golferIdToGolfer;
             },
-            formatPlayers(pgaIdsBytes32_) {
-                var pgaIdsBytes32 = this.dropBlanks(pgaIdsBytes32_);
-                var lineup = [];
-                var index;
-                for (index in pgaIdsBytes32) {
-                    var pgaIdInt = pgaIdsBytes32[index];
-                    if (pgaIdInt != 0) {
-                        if (pgaIdInt in this.golferIdToGolfer) {
-                            lineup.push(this.golferIdToGolfer[pgaIdInt])
-                        } else {
-                            console.warn('cannot find ' + pgaIdInt + ' in this.golferIdToGolfer');
-                        }
-                    }
-                }
-                return lineup;
-            },
-            joinPlayers(playersArray) {
-                var pgaNameIds = []
-                var index;
-                for (index in playersArray) {
-                    var player = playersArray[index];
-                    pgaNameIds.push(player["name"] + ' (' + player["pga_id"] + ')')
-                }
-                if (pgaNameIds.length) {
-                    return pgaNameIds.join("\n");
-                } else {
-                    return "not yet revealed";
-                }
-            },
-            getAllScoresList() {
+            loadAllScoresList() {
                 if (this.blockchainIsConnected()) {
                     // it shows the loading message
                     this.isLoading = true
                     // stopping the interval
                     clearInterval(this.tmoConn)
-                    // TODO: get contests in lobby
-                    // getting all the users from the blockchain
-                    this.getAllScores((address, lineup) => {
-                        this.isLoading = false
-                        this.allScores.push({
-                            address: address,
-                            hash: lineup[0],
-                            players: this.formatPlayers(lineup[1])
-                        })
-                    })
+                    this.allScores = this.getAllScores()
                 }
             },
             /**
@@ -124,32 +77,48 @@
              */
             reloadScores() {
                 this.allScores = []
-                this.getAllScoresList()
+                this.loadAllScoresList()
             },
-            getAllScores(callback) {
-                console.log('calling getEnteredAddressesForCurrentSlate allScores L86')
-    
-                // var address;
-                window.bc.contract().getEnteredAddressesForCurrentSlate.call(
-                    (err, addresses) => {
+            getAllScores() {
+                console.log('calling getAllScores L82')
+
+                let scores = [];
+                window.bc.contract().getGolferIdsOnSlate.call(
+                    (err, golferIds) => {
                         if (err) {
-                            console.log('error calling getEnteredAddressesForCurrentSlate: ', err)
+                            console.log('error calling getGolferIdsOnSlate: ', err)
                         } else {
-                            for (let address of addresses) {
-                                window.bc.contract().getCurrentSlateLineupForAddress.call(
-                                    address,
-                                    (getLineupError, lineup) => {
-                                        if (getLineupError) {
-                                            console.log('error calling getCurrentSlateLineupForAddress: ', getLineupError)
+                            for (let golferId of golferIds) {
+                                score = {
+                                    'pga_id': golferId,
+                                    'name': this.golferIdToGolfer[golferId].name
+                                }
+                                window.bc.contract().getSalary.call(
+                                    golferId,
+                                    (getSalaryError, salary) => {
+                                        if (getSalaryError) {
+                                            console.log('error calling getSalary: ', getLineupError)
                                         } else {
-                                            callback(address, lineup)
+                                            score['salary'] = salary
                                         }
                                     }
                                 )
+                                window.bc.contract().getPoints.call(
+                                    golferId,
+                                    (getPointsError, points) => {
+                                        if (getSalaryError) {
+                                            console.log('error calling getPoints: ', getPointsError)
+                                        } else {
+                                            score['points'] = points
+                                        }
+                                    }
+                                )
+                                scores.push(score);
                             }
                         }
                     }
                 )
+                return scores;
             }
         },
         created() {
