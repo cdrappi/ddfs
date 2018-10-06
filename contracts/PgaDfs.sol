@@ -84,7 +84,7 @@ contract PgaDfs is usingOraclize {
     extraEther = msg.value;
 
     // OAR for ethereum-bridge
-    /* OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475); */
+    /* OAR = OraclizeAddrResolverI(0x03fb51773adf197d0cad88a68a37e968fabd728d); */
     // TODO: tinker with this gas value
     /* oraclize_setCustomGasPrice(1000000000 wei); */
 
@@ -217,7 +217,7 @@ contract PgaDfs is usingOraclize {
       // string  --> left padded bytes32
       // "29725" --> "0x3239373235000000000000000000000000000000000000000000000000000000"
       // replicate this with web3.fromAscii('29725')
-      int8 golferId = parseInt(golferIdsSlice.split(delimiter).toString());
+      int8 golferId = int8(parseInt(golferIdsSlice.split(delimiter).toString()));
 
       for (uint8 jj = 0; jj < ii; jj++) {
         require(golferId != golferIds[jj]);
@@ -293,7 +293,7 @@ contract PgaDfs is usingOraclize {
       for (uint8 ii = 0; ii < playerCount; ii++) {
           var playerColonSalary = compressedSalariesSlice.split(playerDelimiter);
 
-          int8 pgaPlayerId = parseInt(playerColonSalary.split(salaryDelimiter).toString());
+          int8 pgaPlayerId = int8(parseInt(playerColonSalary.split(salaryDelimiter).toString()));
 
           int8 salary = int8(parseInt(playerColonSalary.toString()));
 
@@ -315,7 +315,7 @@ contract PgaDfs is usingOraclize {
 
     for (uint16 i = 0; i < playerScoreSlices.length; i++) {
       playerScoreSlices[i] = compressedScoresSlice.split(playerDelimiter);
-      int8 pgaPlayerId = parseInt(playerScoreSlices[i].split(":".toSlice()).toString());
+      int8 pgaPlayerId = int8(parseInt(playerScoreSlices[i].split(":".toSlice()).toString()));
       uint roundSlices = playerScoreSlices[i].count("-".toSlice()) + 1;
       for (uint rd = 0; rd < roundSlices; rd++) {
         int8 rdScore = int8(parseInt(playerScoreSlices[i].split("-".toSlice()).toString()));
