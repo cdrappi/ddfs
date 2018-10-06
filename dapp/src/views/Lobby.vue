@@ -65,6 +65,7 @@
                     this.getAllLiveContests(contest => {
                         this.isLoading = false
                         this.contests.push(contest)
+												console.log(contest)
                     })
                 }
             },
@@ -80,23 +81,22 @@
       				// calling the method totalUsers from the smart contract
               // TODO: make contract calls work
 							console.log('calling getLiveContestIds lobby L86')
-							for (var ii=1; ii < 5; ii++) {
-								callback( [ii, 5, ii * ii, '0x0', 1531530612] )
-							}
-      				// window.bc.contract().getLiveContestIds.call((err, contestIds) => {
-							// 	if (err) {
-							// 		console.log(err)
-							// 	}
-							// 	else {
-							// 		console.log(contestIds)
-							// 		for (var ii=1; ii < contestIds.length; ii++) {
-							// 			console.log('calling getContestById lobby L93')
-							// 			window.bc.contract().getContestById.call(contestIds[ii], (error, contestData) => {
-							// 				callback(contestData)
-							// 			})
-							// 		} // end if
-							// 	}
-      				// }) // end getLiveContestIds call
+      				window.bc.contract().getLiveContestIds.call((err, contestIds) => {
+								if (err) {
+									console.log('error!!!')
+									console.log(err)
+								}
+								else {
+									console.log(contestIds)
+									for (var ii=1; ii < contestIds.length; ii++) {
+										console.log('calling getContestById lobby L93')
+										window.bc.contract().getContestById.call(contestIds[ii], (error, contestData) => {
+											console.log(contestData)
+											callback(contestData)
+										})
+									} // end if
+								}
+      				}) // end getLiveContestIds call
       			}
         },
         created() {
