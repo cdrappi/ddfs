@@ -197,6 +197,10 @@ contract PgaDfs is usingOraclize {
     return slateIdToSlateGolfers[slateId][pgaId].salary;
   }
 
+  function getPoints(uint16 pgaId) public view returns (int8) {
+    return slateIdToSlateGolfers[slateId][pgaId].points;
+  }
+
   // lineups must:
   // have 8 or less players
   // total salary must be <= salary cap
@@ -517,6 +521,10 @@ contract PgaDfs is usingOraclize {
           contest.owner
         );
     }
+
+  function getGolferIdsOnSlate(bytes12 slateId_) public view returns (uint16[]) {
+    return slateIdToGolferIds[slateId_];
+  }
 
   function testFunction() public view returns (string) {
     return 'test';
