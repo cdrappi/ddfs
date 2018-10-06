@@ -12,10 +12,11 @@
         <table class="table table-striped" v-show="!isLoading">
             <thead class="thead-dark">
                 <tr>
-                    <th style="width:16%">Address</th>
-                    <th style="width:22%">Hash</th>
-                    <th style="width:47%">Lineup</th>
-                    <th style="width:13%">Salary</th>
+                    <th style="width:15%">Address</th>
+                    <th style="width:20%">Hash</th>
+                    <th style="width:45%">Lineup</th>
+                    <th style="width:10%">Salary</th>
+                    <th style="width:10%">Points</th>
                 </tr>
             </thead>
             <tbody>
@@ -26,6 +27,7 @@
                         <pre>{{ joinPlayers(lineup["players"]) }}</pre>
                     </td>
                     <td>{{ sumSalary(lineup["players"]) }}</td>
+                    <td>{{ lineup["points"] }}</td>
     
                 </tr>
             </tbody>
@@ -125,12 +127,13 @@
                     clearInterval(this.tmoConn)
                     // TODO: get contests in lobby
                     // getting all the users from the blockchain
-                    this.getAllLineups((address, lineup) => {
+                    this.getAllLineups((address, lineup, points) => {
                         this.isLoading = false
                         this.allLineups.push({
                             address: address,
                             hash: lineup[0],
-                            players: this.formatPlayers(lineup[1])
+                            players: this.formatPlayers(lineup[1]),
+                            points: Number(points)
                         })
                     })
                 }

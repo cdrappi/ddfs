@@ -147,6 +147,7 @@ contract PgaDfs is usingOraclize {
   mapping (bytes12 => mapping(uint16 => SlateGolfer)) slateIdToSlateGolfers;
   mapping (bytes12 => address[]) slateIdToEnteredAddresses;
   mapping (bytes12 => mapping (address => Lineup)) slateIdToLineups;
+  mapping (bytes12 => mapping (address => int16)) slateIdToEntryScores;
 
   // contest data
   bytes32[] contestIds;
@@ -186,7 +187,7 @@ contract PgaDfs is usingOraclize {
 
   function getCurrentSlateLineupForAddress(address address_) public view returns (bytes32, uint16[8]) {
       Lineup memory theLineup = slateIdToLineups[slateId][address_];
-      return (theLineup.golferIdsHash, theLineup.golferIds);
+      return (theLineup.golferIdsHash, theLineup.golferIds, slateIdToEntryScores[slateId][address_]);
   }
 
   function getSlateId() public view returns (bytes12) {
@@ -328,6 +329,17 @@ contract PgaDfs is usingOraclize {
       slateIdToSlateGolfers[slateId][pgaPlayerId].points = int8(parseInt(playerScoreSlices[i].toString()));
     }
     slateIdToCompleteScoring[slateId] = true;
+  }
+
+  function scoreEnteredAddresses(bytes12 slateId_) public {
+    require(slateIdToCompleteScoring[slateId]);
+    for (uint8 ii = 0; ii < slateIdToEnteredAddresses[slateId_].length; ii++) {
+      address entry = slateIdToEnteredAddresses[slateId_][ii];
+      uint16[8] memory entryPgaIds = slateIdToLineups[slateId_][entry].golferIds;
+      for (uint8 g = 0; g < entryPgaIds.length; g++) {
+        slateIdToEntryScores[slateId_][entry] += slateIdToSlateGolfers[slateId_][entryPgaIds[g]].points;
+      }
+    }
   }
 
   function setSingleContestPayouts(bytes32 contestId) public {
@@ -527,9 +539,8 @@ contract PgaDfs is usingOraclize {
     return contest.slateIdToEntries[slateId_];
   }
 
-  function getEntryScore(bytes12 slateId_, bytes32 contestId, address entryAddress) public view returns (int32) {
-    Contest storage contest = contests[contestId];
-    return contest.slateIdToAddressScores[slateId_][entryAddress];
+  function getEntryScore(bytes12 slateId_, address entryAddress) public view returns (int32) {
+    return slateIdToEntryScores[slateId_][entryAddress];
   }
 
   function getGolferIdsOnSlate(bytes12 slateId_) public view returns (uint16[]) {

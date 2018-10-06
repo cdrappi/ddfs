@@ -20,9 +20,9 @@
             </thead>
             <tbody>
                 <tr v-for="contest in contests">
-                    <td><button @click="viewContest(contest.id)">{{ contest["id"] }}</button></td>
+                    <td>{{ contest["id"] }}</td>
                     <td><button @click="enterContest(contest.id, contest.entryFeeEth)">{{ contest["entryFeeEth"] }}</button></td>
-                    <td>{{ contest["entries"] }}</td>
+                    <td><button @click="viewContest(contest.id)">{{ contest["entries"] }}</button></td>
                     <td>{{ contest["owner"] }}</td>
                 </tr>
             </tbody>

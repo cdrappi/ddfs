@@ -1,7 +1,8 @@
 <template>
     <div>
+        <button class="btn btn-primary center" @click="scoreContest">Score Contest</button>
         <button class="btn btn-primary float-right btn-top" @click="reloadLineups">Reload</button>
-        <h1 class="title">All Lineups</h1>
+        <h1 class="title">{{this.contestId}} Lineups</h1>
     
         <div class="clearfix"></div>
     
@@ -40,7 +41,7 @@
         mixins: [mixin],
         data() {
             return {
-                slateId: 'pga-2018-r490',
+                slateId: 'pga-r2018-490',
                 contestId: '',
                 allLineups: [],
                 isLoading: true, // true when the user list is loading form the blockchain
@@ -50,6 +51,29 @@
             }
         },
         methods: {
+            scoreContest() {
+                window.bc.contract().setSingleContestPayouts(
+                    this.bytesContest(), 
+                    {
+						from: window.bc.web3().eth.coinbase,
+						gas: 8000000,
+						gasPrice: 20000000000
+					},
+					(err, txHash) => {
+						if (err) {
+							console.error('error calling setSingleContestPayouts', err)
+						} else {
+							console.log('successfully called setSingleContestPayouts: -->', txHash, '<--')
+						}
+					}
+				)
+            },
+            bytesSlate() {
+                return web3.fromAscii(this.slateId)
+            },
+            bytesContest(){
+                return web3.fromAscii(this.contestId)
+            },
             getGolferIdToGolfer() {
                 var golferIdToGolfer = {};
                 var golfers = getGolfers();
@@ -72,7 +96,7 @@
                         this.isLoading = false
                         this.allLineups.push({
                             address: address,
-                            points: points
+                            points: Number(points)
                         })
                     })
                 }
@@ -85,20 +109,29 @@
                 this.getAllLineupsList()
             },
             getAllLineups(callback) {
-                console.log('calling  allLineups L148')
+                console.log('calling getContestEntries L88', this.slateId, this.contestId)
     
                 // var address;
+                window.bc.contract().getSlateId.call((err, slateId) => {
+                    if (err) {
+                        console.log(err)
+                    } else {
+                        console.log(slateId);
+                    }
+                })
+
                 window.bc.contract().getContestEntries.call(
-                    this.slateId,
-                    this.contestId,
+                    this.bytesSlate(),
+                    this.bytesContest(),
                     (err, addresses) => {
                         if (err) {
-                            console.log('error calling getEnteredAddressesForCurrentSlate: ', err)
+                            console.log('error calling getContestEntries: ', err)
                         } else {
+                            console.log('addresses', addresses)
                             for (let address of addresses) {
                                 window.bc.contract().getEntryScore.call(
-                                    this.slateId,
-                                    this.contestId,
+                                    this.bytesSlate(),
+                                    this.bytesContest(),
                                     address,
                                     (getEntryScoreError, entryPoints) => {
                                         if (getEntryScoreError) {
