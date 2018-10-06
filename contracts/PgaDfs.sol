@@ -305,11 +305,8 @@ contract PgaDfs is usingOraclize {
 
           uint16 pgaPlayerId = uint16(parseInt(playerColonSalary.split(salaryDelimiter).toString()));
 
-          int8 salary = int8(parseInt(playerColonSalary.toString()));
-
           slateIdToGolferIds[slateId].push(pgaPlayerId);
-          SlateGolfer storage slateGolfer = slateIdToSlateGolfers[slateId][pgaPlayerId];
-          slateGolfer.salary = salary;
+          slateIdToSlateGolfers[slateId][pgaPlayerId].salary = int8(parseInt(playerColonSalary.toString()));
       }
   }
 
@@ -389,14 +386,14 @@ contract PgaDfs is usingOraclize {
     contest.slateIdToPayoutsSet[slateId] = true;
   }
 
-  function withdrawBalanceFromContest(bytes32 contestId, address entry) public {
+  function withdrawBalanceFromContest(bytes32 contestId, address entry) public payable {
     Contest storage contest = contests[contestId];
     require (contest.balances[entry] > 0);
     entry.transfer(contest.balances[entry]);
     contest.balances[entry] = 0;
   }
 
-  function payOutContest(bytes32 contestId) public {
+  function payOutContest(bytes32 contestId) public payable {
     require(slateIdToCompleteScoring[slateId]);
 
     Contest storage contest = contests[contestId];

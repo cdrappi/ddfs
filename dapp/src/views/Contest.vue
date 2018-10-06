@@ -54,7 +54,7 @@
         },
         methods: {
             withdrawBalance() {
-                window.bc.contract().payOutContest(
+                window.bc.contract().withdrawBalanceFromContest(
                     this.bytesContest(),
                     {
                         from: window.bc.web3().eth.coinbase,
