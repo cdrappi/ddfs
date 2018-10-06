@@ -16,6 +16,7 @@
                     <th>Buyin (ETH)</th>
                     <th>Entrants</th>
                     <th>Owner Address</th>
+                    <th>Prize Pool</th>
                 </tr>
             </thead>
             <tbody>
@@ -24,6 +25,7 @@
                     <td><button @click="enterContest(contest.id, contest.entryFeeEth)">{{ contest["entryFeeEth"] }}</button></td>
                     <td><button @click="viewContest(contest.id)">{{ contest["entries"] }}</button></td>
                     <td>{{ contest["owner"] }}</td>
+                    <td>{{ contest["prize_pool"] }}</td></t>
                 </tr>
             </tbody>
         </table>
@@ -78,7 +80,8 @@
                     'id': web3.toAscii(contest[0]),
                     'entryFeeEth': contest[1] / 1e18,
                     'entries': Number(contest[2]),
-                    'owner': contest[3]
+                    'owner': contest[3],
+                    'prize_pool': contest[4]
                 }
             },
             getContestList() {

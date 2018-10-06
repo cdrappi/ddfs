@@ -494,14 +494,16 @@ contract PgaDfs is usingOraclize {
       bytes32,
       uint,
       uint,
-      address
+      address,
+      uint
     ) {
       Contest storage contest = contests[contestId];
       return (
           contestId,
           contest.entryFee,
           contest.slateIdToEntries[slateId].length,
-          contest.owner
+          contest.owner,
+          contest.slateIdToPrizePool[slateId]
         );
     }
 
