@@ -389,12 +389,11 @@ contract PgaDfs is usingOraclize {
     contest.slateIdToPayoutsSet[slateId] = true;
   }
 
-  function withdrawBalanceFromContest(bytes32 contestId) public {
+  function withdrawBalanceFromContest(bytes32 contestId, address entry) public {
     Contest storage contest = contests[contestId];
-    if (contest.balances[msg.sender] > 0) {
-      msg.sender.transfer(contest.balances[msg.sender]);
-      contest.balances[msg.sender] = 0;
-    }
+    require (contest.balances[entry] > 0);
+    entry.transfer(contest.balances[entry]);
+    contest.balances[entry] = 0;
   }
 
   function payOutContest(bytes32 contestId) public {
@@ -407,8 +406,7 @@ contract PgaDfs is usingOraclize {
     for (uint ii = 0; ii < contest.slateIdToEntries[slateId].length; ii++) {
       address entry = contest.slateIdToEntries[slateId][ii];
       if (contest.balances[entry] > 0) {
-        entry.transfer(contest.balances[entry]);
-        contest.balances[msg.sender] = 0;
+        withdrawBalanceFromContest(contestId, entry);
       }
     }
     contest.live = false;

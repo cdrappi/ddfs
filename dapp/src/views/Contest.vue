@@ -24,6 +24,8 @@
                 </tr>
             </tbody>
         </table>
+        <br>
+        <button class="btn btn-primary float-right btn-top" @click="withdrawBalance">Withdraw Balance</button>
     </div>
 </template>
 
@@ -51,6 +53,23 @@
             }
         },
         methods: {
+            withdrawBalance() {
+                window.bc.contract().payOutContest(
+                    this.bytesContest(),
+                    {
+                        from: window.bc.web3().eth.coinbase,
+                        gas: 80000,
+						gasPrice: 20000000000,
+                    },
+                    (err, txHash) => {
+                        if (err) {
+							console.error('error calling withdrawBalanceFromContest', err)
+						} else {
+							console.log('successfully called withdrawBalanceFromContest: -->', txHash, '<--')
+						}
+                    }
+                )
+            },
             scoreContest() {
                 window.bc.contract().setSingleContestPayouts(
                     this.bytesContest(), 
