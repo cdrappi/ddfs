@@ -236,8 +236,8 @@ contract PgaDfs is usingOraclize {
     }
   }
 
-  function calculateRake(uint eth) public view returns (uint) {
-    return eth - (eth * rakeTimesOneThousand) / 1000;
+  function calculateRake(uint wei_) public view returns (uint) {
+    return (wei_ * rakeTimesOneThousand) / 1000;
   }
 
   function createContest(bytes32 contestId) public payable {
@@ -280,6 +280,8 @@ contract PgaDfs is usingOraclize {
       // and by default they can get paid out at the end
       // otherwise they can withdraw
       activeContest.balances[msgSender] += ethEntered - activeContest.entryFee - rakeToCollect;
+      activeContest.slateIdToEntries[slateId].push(msgSender);
+      activeContest.slateIdToEntered[slateId][msgSender] = true;
     }
   }
 
@@ -493,7 +495,7 @@ contract PgaDfs is usingOraclize {
   }
 
   function getLiveContestIds() public view returns (bytes32[]) {
-    bytes32[] memory liveContestIds;  // why must use storage?
+    /* bytes32[] memory liveContestIds;  // why must use storage?
     uint jj = 0;
     for (uint ii = 0; ii < contestIds.length; ii++) {
       bytes32 contestId = contestIds[ii];
@@ -501,8 +503,8 @@ contract PgaDfs is usingOraclize {
         liveContestIds[jj] = contestId;
         jj += 1;
       }
-    }
-    return liveContestIds;
+    } */
+    return contestIds;
   }
 
   function getContestById(bytes32 contestId) public view returns (

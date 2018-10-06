@@ -16,16 +16,14 @@
                     <th>Buyin</th>
                     <th>Entrants</th>
                     <th>Owner Address</th>
-                    <th>Created At</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="contest in contests">
-                    <td>{{ contest[0] }}</td>
-                    <td>{{ contest[1] }}</td>
-                    <td>{{ contest[2] }}</td>
-                    <td>{{ contest[3] }}</td>
-                    <td>{{ toDate(contest[4]) }}</td>
+                    <td>{{ contest["id"] }}</td>
+                    <td>{{ contest["entryFeeEth"] }}</td>
+                    <td>{{ contest["entries"] }}</td>
+                    <td>{{ contest["owner"] }}</td>
                 </tr>
             </tbody>
         </table>
@@ -54,6 +52,14 @@
              * Get the list of all live contests users once the connection to the
              * blockchain is established.
              */
+						formatContest(contest) {
+								return {
+									'id': web3.toAscii(contest[0]),
+									'entryFeeEth': contest[1] / 1e18,
+									'entries': contest[2],
+									'owner': contest[3]
+								}
+						},
             getContestList() {
                 if (this.blockchainIsConnected()) {
                     // it shows the loading message
@@ -63,9 +69,10 @@
                     // TODO: get contests in lobby
                     // getting all the users from the blockchain
                     this.getAllLiveContests(contest => {
-                        this.isLoading = false
-                        this.contests.push(contest)
-												console.log(contest)
+                        this.isLoading = false;
+												var formattedContest = this.formatContest(contest);
+                        this.contests.push(formattedContest);
+												console.log(formattedContest);
                     })
                 }
             },
@@ -88,12 +95,19 @@
 								}
 								else {
 									console.log(contestIds)
-									for (var ii=1; ii < contestIds.length; ii++) {
-										console.log('calling getContestById lobby L93')
-										window.bc.contract().getContestById.call(contestIds[ii], (error, contestData) => {
-											console.log(contestData)
-											callback(contestData)
-										})
+									for (let contestId of contestIds) {
+										console.log(contestId, ': calling getContestById lobby L93')
+										window.bc.contract().getContestById.call(
+											contestId,
+											(getContestError, contestData) => {
+												if (getContestError) {
+													console.log('error calling getContestById ', getContestError)
+												}
+												else {
+													callback(contestData)
+												}
+											}
+										)
 									} // end if
 								}
       				}) // end getLiveContestIds call

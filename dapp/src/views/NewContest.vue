@@ -75,7 +75,7 @@
                     {
                         from: window.bc.web3().eth.coinbase,
                         gas: 800000,
-                        value: this.entryFee * 1e18
+                        value: Math.ceil(this.entryFee * 1e18 / 0.98)
                     },
                     (err, txHash) => {
                         if (err) {
