@@ -11,14 +11,20 @@
  *     gasPrice: 10000000000,
  *   },
  */
-
  module.exports = {
- 	networks: {
- 		ganache: {
- 			host: "127.0.0.1",
- 			port: 7545,
- 			network_id: "*",
-      gas: 8000000
- 		}
- 	}
+     networks: {
+         ganache: {
+      			 host: "127.0.0.1",
+      			 port: 7545,
+      			 network_id: "*",
+             gas: 8000000,
+             gasPrice: 25000000000
+         }
+     },
+     solc: {
+         optimizer: {
+             enabled: true,
+             runs: 200
+         }
+     }
  };
