@@ -124,13 +124,13 @@
                     clearInterval(this.tmoConn)
                     // TODO: get contests in lobby
                     // getting all the users from the blockchain
-                    this.getAllLineups((address, lineup, points) => {
+                    this.getAllLineups((address, lineup) => {
                         this.isLoading = false
                         this.allLineups.push({
                             address: address,
                             hash: lineup[0],
                             players: this.formatPlayers(lineup[1]),
-                            points: Number(points)
+                            points: Number(lineup[2])
                         })
                     })
                 }

@@ -357,11 +357,7 @@ contract PgaDfs is usingOraclize {
     // calculate the average score in the contest
     for (uint8 ii = 0; ii < totalEntries; ii++) {
       address entry = contest.slateIdToEntries[slateId][ii];
-      uint16[8] memory entryPgaIds = slateIdToLineups[slateId][entry].golferIds;
-      for (uint8 g = 0; g < entryPgaIds.length; g++) {
-        contest.slateIdToAddressScores[slateId][entry] += slateIdToSlateGolfers[slateId][entryPgaIds[g]].points;
-      }
-      totalPoints += contest.slateIdToAddressScores[slateId][entry];
+      totalPoints += slateIdToEntryScores[slateId][entry];
     }
 
     // of the top half (except any of those that scored < 0),
@@ -373,8 +369,9 @@ contract PgaDfs is usingOraclize {
 
     for (ii = 0; ii < totalEntries; ii++) {
       entry = contest.slateIdToEntries[slateId][ii];
-      if (contest.slateIdToAddressScores[slateId][entry] >= averagePointsRoundedDown && contest.slateIdToAddressScores[slateId][entry] >= 0) {
-        uint squaredScore = uint(contest.slateIdToAddressScores[slateId][entry] * contest.slateIdToAddressScores[slateId][entry]);
+      int16 score = slateIdToEntryScores[slateId][entry];
+      if (score >= averagePointsRoundedDown && score >= 0) {
+        uint squaredScore = uint(score * score);
         winningEntries.push(entry);
         summedSquaredWinningScores += squaredScore;
       }
@@ -383,9 +380,10 @@ contract PgaDfs is usingOraclize {
     // then pay out people proportional to squared points
     for (ii = 0; ii < winningEntries.length; ii++) {
       entry = winningEntries[ii];
+      int16 score = slateIdToEntryScores[slateId][entry];
       // TODO: make sure there's no rounding error B.S. going on
       // that makes us massively over or under pay people
-      squaredScore = uint(contest.slateIdToAddressScores[slateId][entry] * contest.slateIdToAddressScores[slateId][entry]);
+      squaredScore = uint(score * score);
       uint toPayout = (contest.prizePool * squaredScore) / summedSquaredWinningScores;
       contest.balances[entry] += toPayout;
     }
@@ -539,7 +537,7 @@ contract PgaDfs is usingOraclize {
     return contest.slateIdToEntries[slateId_];
   }
 
-  function getEntryScore(bytes12 slateId_, address entryAddress) public view returns (int32) {
+  function getEntryScore(bytes12 slateId_, address entryAddress) public view returns (int16) {
     return slateIdToEntryScores[slateId_][entryAddress];
   }
 
