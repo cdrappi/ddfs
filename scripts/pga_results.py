@@ -2,7 +2,7 @@ import requests
 import json
 from tribeopen.aws.s3_resource import create_s3
 
-pga_tournament_id = '471'
+pga_tournament_id = '490'
 year = '2018'
 
 url = f'https://statdata.pgatour.com/r/{pga_tournament_id}/{year}/leaderboard-v2mini.json'
@@ -12,11 +12,18 @@ results = response.json()
 
 scores_list = []
 for player in results['leaderboard']['players']:
-    fantasy_points = sum(
-        80 - int(rd['strokes'])  # must be int-able
-        for rd in player['rounds']
-        if rd['strokes']  # want to prevent 0s and Nones
-    )
+    fantasy_points = 0
+    total_strokes = 0
+    for rd in player['rounds']:
+        round_strokes = rd['strokes']
+        if not round_strokes:
+            pass
+        elif round_strokes + total_strokes <= player['total_strokes']:
+            fantasy_points += (80 - round_strokes)
+            total_strokes += round_strokes
+        else:
+            print(f'WARNING: {player["rounds"]}')
+            break
     scores_list.append(f'{int(player["player_id"])}:{fantasy_points}')
 
 scores_string = ' '.join(scores_list)
@@ -28,6 +35,5 @@ s3.write_data(
     }),
     key=f'compressedScores/{year}/{pga_tournament_id}.json'
 )
-
 
 scores_string

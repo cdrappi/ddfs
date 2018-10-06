@@ -21,6 +21,10 @@
                 <a><strong>All Lineups</strong></a>
             </router-link>
 
+            <router-link tag="li" class="nav-link" to="/scores" exact>
+                <a>Scores</a>
+            </router-link>
+
             <router-link tag="li" class="nav-link" to="/admin" exact>
                 <a><strong>Admin</strong></a>
             </router-link>

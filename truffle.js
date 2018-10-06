@@ -18,7 +18,7 @@
       			 port: 7545,
       			 network_id: "*",
              gas: 8000000,
-             gasPrice: 25000000000
+             gasPrice: 200000000
          }
      },
      solc: {

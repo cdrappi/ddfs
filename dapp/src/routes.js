@@ -5,6 +5,7 @@ import Lineup from '@/views/Lineup'
 import Lobby from '@/views/Lobby'
 import Admin from '@/views/Admin'
 import NewContest from '@/views/NewContest'
+import Scores from '@/views/Scores'
 
 Vue.use(Router)
 
@@ -34,6 +35,11 @@ export default new Router({
           path: '/new-contest',
           name: 'NewContest',
           component: NewContest
+        },
+        {
+          path: '/scores',
+          name: 'Scores',
+          component: Scores
         }
     ],
     linkActiveClass: 'active'

@@ -12,10 +12,10 @@
         <table class="table table-striped" v-show="!isLoading">
             <thead class="thead-dark">
                 <tr>
-                    <th style="width:18%">PGA ID</th>
-                    <th style="width:22%">Name</th>
-                    <th style="width:33%">Salary</th>
-                    <th style="width:27%">Points</th>
+                    <th style="width:20%">PGA ID</th>
+                    <th style="width:50%">Name</th>
+                    <th style="width:15%">Salary</th>
+                    <th style="width:15%">Points</th>
                 </tr>
             </thead>
             <tbody>
@@ -69,7 +69,15 @@
                     this.isLoading = true
                     // stopping the interval
                     clearInterval(this.tmoConn)
-                    this.allScores = this.getAllScores()
+                    this.getAllScores((pgaId, name, salary, points) => {
+                        this.isLoading = false
+                        this.allScores.push({
+                            pga_id: pgaId,
+                            name: name,
+                            salary: salary,
+                            points: points,
+                        })
+                    })
                 }
             },
             /**
@@ -79,53 +87,43 @@
                 this.allScores = []
                 this.loadAllScoresList()
             },
-            getAllScores() {
-                console.log('calling getAllScores L82')
-
-                let scores = [];
+            getAllScores(callback) {
+                console.log('calling getEnteredAddressesForCurrentSlate allLineups L86')
+    
+                // var address;
                 window.bc.contract().getGolferIdsOnSlate.call(
-                    (err, golferIds) => {
+                    this.slateId,
+                    (err, slateGolfers) => {
                         if (err) {
                             console.log('error calling getGolferIdsOnSlate: ', err)
                         } else {
-                            for (let golferId of golferIds) {
-                                score = {
-                                    'pga_id': golferId,
-                                    'name': this.golferIdToGolfer[golferId].name
-                                }
-                                window.bc.contract().getSalary.call(
-                                    golferId,
-                                    (getSalaryError, salary) => {
-                                        if (getSalaryError) {
-                                            console.log('error calling getSalary: ', getLineupError)
-                                        } else {
-                                            score['salary'] = salary
-                                        }
-                                    }
-                                )
+                            for (let pgaId of slateGolfers) {
                                 window.bc.contract().getPoints.call(
-                                    golferId,
+                                    pgaId,
                                     (getPointsError, points) => {
-                                        if (getSalaryError) {
+                                        if (getPointsError) {
                                             console.log('error calling getPoints: ', getPointsError)
                                         } else {
-                                            score['points'] = points
+                                            callback(
+                                                Number(pgaId),
+                                                this.golferIdToGolfer[pgaId].name,
+                                                this.golferIdToGolfer[pgaId].eth_salary,
+                                                Number(points)
+                                            )
                                         }
                                     }
                                 )
-                                scores.push(score);
                             }
                         }
                     }
                 )
-                return scores;
-            }
+            },
         },
         created() {
             // it tries to get the user list from the blockchian once
             // the connection is established
             this.tmoConn = setInterval(() => {
-                this.getAllScoresList()
+                this.loadAllScoresList()
             }, 1000)
         }
     }
