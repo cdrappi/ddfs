@@ -522,6 +522,16 @@ contract PgaDfs is usingOraclize {
         );
     }
 
+  function getContestEntries(bytes12 slateId_, bytes32 contestId) public view returns (address[]) {
+    Contest storage contest = contests[contestId];
+    return contest.slateIdToEntries[slateId_];
+  }
+
+  function getEntryScore(bytes12 slateId_, bytes32 contestId, address entryAddress) public view returns (int8) {
+    Contest storage contest = contests[contestId];
+    return contest.slateIdToAddressScores[slateId_][entryAddress];
+  }
+
   function getGolferIdsOnSlate(bytes12 slateId_) public view returns (uint16[]) {
     return slateIdToGolferIds[slateId_];
   }
