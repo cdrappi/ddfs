@@ -23,12 +23,9 @@
                 <tr v-for="lineup in allLineups">
                     <td>{{ lineup["address"] }}</td>
                     <td>{{ lineup["hash"] }}</td>
-                    <td>
-                        <pre>{{ joinPlayers(lineup["players"]) }}</pre>
-                    </td>
+                    <td><pre>{{ joinPlayers(lineup["players"]) }}</pre></td>
                     <td>{{ sumSalary(lineup["players"]) }}</td>
                     <td>{{ lineup["points"] }}</td>
-    
                 </tr>
             </tbody>
         </table>

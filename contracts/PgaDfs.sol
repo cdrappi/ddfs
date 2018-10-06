@@ -185,7 +185,7 @@ contract PgaDfs is usingOraclize {
       return slateIdToEnteredAddresses[slateId];
   }
 
-  function getCurrentSlateLineupForAddress(address address_) public view returns (bytes32, uint16[8]) {
+  function getCurrentSlateLineupForAddress(address address_) public view returns (bytes32, uint16[8], int16) {
       Lineup memory theLineup = slateIdToLineups[slateId][address_];
       return (theLineup.golferIdsHash, theLineup.golferIds, slateIdToEntryScores[slateId][address_]);
   }
