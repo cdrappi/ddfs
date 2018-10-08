@@ -148,6 +148,7 @@
 			submitCompressedSalaries() {
 				console.log('calling setSalaries Admin.vue L112')
 				window.bc.contract().setSalaries(
+					this.bytesSlate(),
 					this.compressedSalariesString, {
 						from: window.bc.web3().eth.coinbase,
 						gas: 8000000,
@@ -184,6 +185,7 @@
 			submitCompressedScores() {
 				console.log('calling setScores Admin.vue L132')
 				window.bc.contract().setScores(
+					this.bytesSlate(),
 					this.compressedScoresString, {
 						from: window.bc.web3().eth.coinbase,
 						gas: 8000000,

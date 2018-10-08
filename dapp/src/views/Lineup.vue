@@ -250,7 +250,7 @@
     }
     
     .flex-container>div {
-        background-color: #f1f1f1;
+        background-color: #ffffff;
         margin: 0px;
         height: 96px;
         border: DodgerBlue;
@@ -274,14 +274,15 @@
     
     .wrapper {
         width: 20%;
-        height: 25%;
+        height: 10%;
         top: 0;
         right: 0;
+        border: none;
         position: absolute;
     }
     
     .close:before {
-        content: '✕';
+        content: '❌';
     }
     
     .close {
@@ -294,7 +295,7 @@
     .column {
         position: relative;
         float: left;
-        width: 50%;
+        width: 40%;
     }
     /* Clear floats after the columns */
     .row:after {
