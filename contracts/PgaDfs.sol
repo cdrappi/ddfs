@@ -264,7 +264,7 @@ contract PgaDfs is usingOraclize {
       entryFee : msg.value,
       live : true
     });
-    payEntryFeeToContest(contestId, msg.sender, msg.value);
+    payEntryFeeToContest(slateId_, contestId, msg.sender, msg.value);
   }
 
   function enterContest(bytes12 slateId_, bytes32 contestId_) public payable {
@@ -341,6 +341,31 @@ contract PgaDfs is usingOraclize {
     }
   }
 
+  function averagePoints(bytes12 slateId_, bytes32 contestId_) public returns (int) {
+    int totalPoints = 0;
+    // calculate the average score in the contest
+    uint16 totalEntries = uint16(contests[contestId_].slateIdToEntries[slateId_].length);
+    for (uint8 ii = 0; ii < totalEntries; ii++) {
+      totalPoints += slateIdToEntryScores[slateId_][contests[contestId_].slateIdToEntries[slateId_][ii]];
+    }
+    return totalPoints / totalEntries;
+  }
+
+  function sumSquaredWinners(bytes12 slateId_, bytes32 contestId_, int averagePoints_) public returns (uint) {
+
+    uint summedSquaredWinningScores = 0;
+
+    uint16 totalEntries = uint16(contests[contestId_].slateIdToEntries[slateId_].length);
+    for (uint8 ii = 0; ii < totalEntries; ii++) {
+      int16 score = slateIdToEntryScores[slateId_][contests[contestId_].slateIdToEntries[slateId_][ii]];
+      if (score >= averagePoints_ && score >= 0) {
+        uint squaredScore = uint(score) * uint(score);
+        summedSquaredWinningScores += squaredScore;
+      }
+    }
+    return summedSquaredWinningScores;
+  }
+
   function setSingleContestPayouts(bytes12 slateId_, bytes32 contestId_) public {
     // everyone who scores > max(0, the contest average) gets paid
     // you are paid proportional to your squared score
@@ -350,40 +375,23 @@ contract PgaDfs is usingOraclize {
     require(contest.live); //, "contest is not live");
     require(!contest.slateIdToPayoutsSet[slateId_]); //,"contest payouts have already been set");
 
-    uint16 totalEntries = uint16(contest.slateIdToEntries[slateId_].length);
     uint remainingContestFunds = contest.slateIdToPrizePool[slateId_];
-    int totalPoints = 0;
-
-    // calculate the average score in the contest
-    for (uint8 ii = 0; ii < totalEntries; ii++) {
-      address entry = contest.slateIdToEntries[slateId_][ii];
-      totalPoints += slateIdToEntryScores[slateId_][entry];
-    }
 
     // of the top half (except any of those that scored < 0),
     // sum up the squared scores
-    int averagePointsRoundedDown = totalPoints / totalEntries;
-    uint summedSquaredWinningScores = 0;
-
-    for (ii = 0; ii < totalEntries; ii++) {
-      entry = contest.slateIdToEntries[slateId_][ii];
-      int16 score = slateIdToEntryScores[slateId_][entry];
-      if (score >= averagePointsRoundedDown && score >= 0) {
-        uint squaredScore = uint(score) * uint(score);
-        summedSquaredWinningScores += squaredScore;
-      }
-    }
+    uint16 totalEntries = uint16(contests[contestId_].slateIdToEntries[slateId_].length);
+    int averagePointsRoundedDown = averagePoints(slateId_, contestId_);
+    uint summedSquaredWinningScores = sumSquaredWinners(slateId_, contestId_, averagePointsRoundedDown);
 
     // then pay out people proportional to squared points
-    for (ii = 0; ii < totalEntries; ii++) {
-      entry = contest.slateIdToEntries[slateId_][ii];
-      score = slateIdToEntryScores[slateId_][entry];
+    for (uint8 ii = 0; ii < totalEntries; ii++) {
+      address entry = contest.slateIdToEntries[slateId_][ii];
+      int16 score = slateIdToEntryScores[slateId_][entry];
       if (score >= averagePointsRoundedDown && score >= 0) {
         // TODO: make sure there's no rounding error B.S. going on
         // that makes us massively over or under pay people
-        squaredScore = uint(score) * uint(score);
-        uint toPayout = (contest.slateIdToPrizePool[slateId_] * squaredScore) / summedSquaredWinningScores;
-        contest.recoup[slateId][entry] = toPayout;
+        uint toPayout = (contest.slateIdToPrizePool[slateId_] * uint(score) * uint(score)) / summedSquaredWinningScores;
+        contest.recoup[slateId_][entry] = toPayout;
         userBalances[entry] += toPayout;
         remainingContestFunds -= toPayout;
       }
@@ -391,7 +399,7 @@ contract PgaDfs is usingOraclize {
     // make sure we paid out the entire contest correctly
     require(100 * remainingContestFunds < contest.slateIdToPrizePool[slateId_]); //, "due to rounding errors we paid out the contest incorrectly");
     extraEther += remainingContestFunds;
-    contest.slateIdToPayoutsSet[slateId] = true;
+    contest.slateIdToPayoutsSet[slateId_] = true;
     contest.live = false;
   }
 
@@ -434,7 +442,7 @@ contract PgaDfs is usingOraclize {
     uint lockTimestamp
   ) public {
     require(msg.sender == contractAdmin); //, "only contract admin can perform this action");
-    require(!slateIdToLockTimestamp[_newSlateId]); // "already created a slate with this id"
+    require(slateIdToLockTimestamp[_newSlateId] == 0); // "already created a slate with this id"
     slateIds.push(_newSlateId);
     slateIdToLockTimestamp[_newSlateId] = lockTimestamp;
     _setCompressedScoresUrl(_compressedScoresUrl);
@@ -470,11 +478,12 @@ contract PgaDfs is usingOraclize {
     // can't compare string storage pointers and string literals,
     // so instead let's compare their keccak256 hashes!
     bytes32 actionHash = keccak256(queryIdToCallbackAction[myid]);
+    bytes12 slateId_ = "";
     if (actionHash == keccak256("Salaries")) {
-      setSalaries(result);
+      setSalaries(slateId_, result);
     }
     if (actionHash == keccak256("Scores")) {
-      setScores(result);
+      setScores(slateId_, result);
     }
   }
 

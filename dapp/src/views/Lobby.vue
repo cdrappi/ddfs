@@ -78,10 +78,10 @@
             formatContest(contest) {
                 return {
                     'id': web3.toAscii(contest[0]),
-                    'entryFeeEth': (Number(contest[1] / 1e18)).toFixed(2),
+                    'entryFeeEth': (Number(contest[1] / 1e18)).toFixed(3),
                     'entries': Number(contest[2]),
                     'owner': contest[3],
-                    'prize_pool': Number(contest[4] / 1e18).toFixed(2)
+                    'prize_pool': Number(contest[4] / 1e18).toFixed(3)
                 }
             },
             getContestList() {
