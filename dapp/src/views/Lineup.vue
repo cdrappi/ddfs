@@ -65,9 +65,7 @@
         data() {
             return {
                 options: getGolfers(),
-                selectedResources: getSelectedGolfersFromCookie(
-                    window.bc.web3().eth.coinbase
-                ),
+                selectedResources: getSelectedGolfersFromCookie(window.bc.web3().eth.coinbase),
                 optionsProxy: [],
                 submitting: false,
                 errorSubmit: false,
