@@ -89,7 +89,6 @@
                     !this.blockchainIsConnected()
                 )
             },
-    
         },
         methods: {
             updateSelected(value) {
