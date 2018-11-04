@@ -99,6 +99,7 @@
                         } else {
                             for (let pgaId of slateGolfers) {
                                 window.bc.contract().getPoints.call(
+                                    this.slateId,
                                     pgaId,
                                     (getPointsError, points) => {
                                         if (getPointsError) {

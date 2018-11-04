@@ -4,7 +4,7 @@
     
         <div class="flex-container">
             <div v-for="(resource, index) in selectedResources" v-bind:style="{ width: resource.eth_salary + '%' }">
-                <span>{{ resource.name }} ({{resource.pga_id}})</span>
+                <span>{{ resource.name }} <br>Ξ<strong>{{resource.eth_salary}}</strong> ({{resource.pga_id}})</span>
                 <button class="wrapper" @click="removeDependency(index)">
                                     <span class="close"></span>
                                 </button>
@@ -65,9 +65,7 @@
         data() {
             return {
                 options: getGolfers(),
-                selectedResources: getSelectedGolfersFromCookie(
-                    window.bc.web3().eth.coinbase
-                ),
+                selectedResources: getSelectedGolfersFromCookie(window.bc.web3().eth.coinbase),
                 optionsProxy: [],
                 submitting: false,
                 errorSubmit: false,
@@ -91,7 +89,6 @@
                     !this.blockchainIsConnected()
                 )
             },
-    
         },
         methods: {
             updateSelected(value) {
@@ -250,14 +247,14 @@
     }
     
     .flex-container>div {
-        background-color: #f1f1f1;
+        background-color: #ffffff;
         margin: 0px;
         height: 96px;
         border: DodgerBlue;
         border-style: ridge;
-        font-size: 14px;
+        font-size: 12px;
         position: relative;
-        text-align: justify;
+        text-align: left;
         vertical-align: text-bottom;
         display: table-cell;
     }
@@ -265,23 +262,24 @@
     .flex-container>div>span {
         position: absolute;
         vertical-align: middle;
-        bottom: 25%;
-        left: 10%;
+        bottom: 20%;
+        left: 20%;
         width: 50%;
-        text-align: right;
+        text-align: left;
         word-wrap: break-word;
     }
     
     .wrapper {
-        width: 20%;
-        height: 25%;
+        width: 30px;
+        height: 30px;
         top: 0;
         right: 0;
+        border: none;
         position: absolute;
     }
     
     .close:before {
-        content: '✕';
+        content: '❌';
     }
     
     .close {
@@ -294,7 +292,7 @@
     .column {
         position: relative;
         float: left;
-        width: 50%;
+        width: 40%;
     }
     /* Clear floats after the columns */
     .row:after {
